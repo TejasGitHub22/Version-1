@@ -44,7 +44,7 @@ public class CoffeeMachine {
     
     @DecimalMin(value = "0.0", message = "Sugar level must be between 0 and 100")
     @DecimalMax(value = "100.0", message = "Sugar level must be between 0 and 100")
-    @Column(name = "waterLevel")
+    @Column(name = "sugarLevel")
     private Float sugarLevel;
     
     @DecimalMin(value = "0.0", message = "Milk level must be between 0 and 100")
