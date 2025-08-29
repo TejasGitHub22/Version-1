@@ -1,0 +1,195 @@
+🏥 Health & Monitoring APIs
+1. Health Check
+Type: GET
+Endpoint: /api/health
+Purpose: Check application status
+Response: Application health information
+👥 User Management APIs
+
+2. Create User
+Type: POST
+Endpoint: /api/users
+Purpose: Create a new user
+Body: User details (username, role)
+
+3. Get User by ID
+Type: GET
+Endpoint: /api/users/{id}
+Purpose: Retrieve specific user
+Parameters: User ID in path
+4. Get All Users
+Type: GET
+Endpoint: /api/users
+Purpose: List all active users
+5. Get Users by Role
+Type: GET
+Endpoint: /api/users/role/{role}
+Purpose: Get users by specific role
+Parameters: Role (FACILITY/ADMIN) in path
+6. Update User
+Type: PUT
+Endpoint: /api/users/{id}
+Purpose: Update existing user
+Parameters: User ID in path
+Body: Updated user details
+7. Delete User
+Type: DELETE
+Endpoint: /api/users/{id}
+Purpose: Soft delete user
+Parameters: User ID in path
+8. Reactivate User
+Type: POST
+Endpoint: /api/users/{id}/reactivate
+Purpose: Reactivate deleted user
+Parameters: User ID in path
+🏢 Facility Management APIs
+9. Create Facility
+Type: POST
+Endpoint: /api/facilities
+Purpose: Create new facility
+Body: Facility details (name, location)
+10. Get Facility by ID
+Type: GET
+Endpoint: /api/facilities/{id}
+Purpose: Retrieve specific facility
+Parameters: Facility ID in path
+11. Get All Facilities
+Type: GET
+Endpoint: /api/facilities
+Purpose: List all active facilities
+12. Get Facility with Machines
+Type: GET
+Endpoint: /api/facilities/{id}/machines
+Purpose: Get facility with its coffee machines
+Parameters: Facility ID in path
+13. Update Facility
+Type: PUT
+Endpoint: /api/facilities/{id}
+Purpose: Update existing facility
+Parameters: Facility ID in path
+Body: Updated facility details
+14. Delete Facility
+Type: DELETE
+Endpoint: /api/facilities/{id}
+Purpose: Soft delete facility
+Parameters: Facility ID in path
+☕ Coffee Machine Management APIs
+15. Create Coffee Machine
+Type: POST
+Endpoint: /api/machines
+Purpose: Create new coffee machine
+Body: Machine details (facilityId, status)
+16. Get Machine by ID
+Type: GET
+Endpoint: /api/machines/{id}
+Purpose: Retrieve specific machine
+Parameters: Machine ID in path
+17. Get All Machines
+Type: GET
+Endpoint: /api/machines
+Purpose: List all active machines
+18. Get Machines by Facility
+Type: GET
+Endpoint: /api/machines/facility/{facilityId}
+Purpose: Get machines in specific facility
+Parameters: Facility ID in path
+19. Update Machine
+Type: PUT
+Endpoint: /api/machines/{id}
+Purpose: Update existing machine
+Parameters: Machine ID in path
+Body: Updated machine details
+20. Delete Machine
+Type: DELETE
+Endpoint: /api/machines/{id}
+Purpose: Soft delete machine
+Parameters: Machine ID in path
+21. Brew Coffee
+Type: POST
+Endpoint: /api/machines/brew
+Purpose: Process coffee brewing request
+Body: Brew command (machineId, brewType, userId)
+📊 Usage History APIs
+22. Create Usage Record
+Type: POST
+Endpoint: /api/usage
+Purpose: Record coffee usage
+Body: Usage details (machineId, brewType, user)
+23. Get Usage by ID
+Type: GET
+Endpoint: /api/usage/{id}
+Purpose: Retrieve specific usage record
+Parameters: Usage ID in path
+24. Get All Usage Records
+Type: GET
+Endpoint: /api/usage
+Purpose: List all usage records
+25. Get Usage by Machine
+Type: GET
+Endpoint: /api/usage/machine/{machineId}
+Purpose: Get usage for specific machine
+Parameters: Machine ID in path
+26. Get Usage by User
+Type: `GET**
+Endpoint: /api/usage/user/{userId}
+Purpose: Get usage by specific user
+Parameters: User ID in path
+27. Get Today's Usage
+Type: GET
+Endpoint: /api/usage/today
+Purpose: Get today's usage statistics
+28. Get Usage Statistics
+Type: GET
+Endpoint: /api/usage/statistics
+Purpose: Get usage analytics and trends
+🚨 Alert Management APIs
+29. Create Alert
+Type: POST
+Endpoint: /api/alerts
+Purpose: Create new alert
+Body: Alert details (machineId, alertType, message)
+30. Get Alert by ID
+Type: GET
+Endpoint: /api/alerts/{id}
+Purpose: Retrieve specific alert
+Parameters: Alert ID in path
+31. Get All Alerts
+Type: `GET**
+Endpoint: /api/alerts
+Purpose: List all active alerts
+32. Get Alerts by Machine
+Type: GET
+Endpoint: /api/alerts/machine/{machineId}
+Purpose: Get alerts for specific machine
+Parameters: Machine ID in path
+33. Get Alerts by Type
+Type: GET
+Endpoint: /api/alerts/type/{alertType}
+Purpose: Get alerts by specific type
+Parameters: Alert type in path
+34. Update Alert
+Type: PUT
+Endpoint: /api/alerts/{id}
+Purpose: Update existing alert
+Parameters: Alert ID in path
+Body: Updated alert details
+35. Delete Alert
+Type: DELETE
+Endpoint: /api/alerts/{id}
+Purpose: Soft delete alert
+Parameters: Alert ID in path
+📈 Dashboard & Analytics APIs
+36. Get Dashboard Summary
+Type: GET
+Endpoint: /api/dashboard/summary
+Purpose: Get overall system statistics
+37. Get Facility Dashboard
+Type: GET
+Endpoint: /api/dashboard/facility/{facilityId}
+Purpose: Get facility-specific dashboard
+Parameters: Facility ID in path
+38. Get Machine Dashboard
+Type: `GET**
+Endpoint: /api/dashboard/machine/{machineId}
+Purpose: Get machine-specific dashboard
+Parameters: Machine ID in path
