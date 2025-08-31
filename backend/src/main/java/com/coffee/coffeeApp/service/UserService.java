@@ -194,6 +194,7 @@ public class UserService {
         UserDto dto = new UserDto();
         dto.setId(String.valueOf(user.getId()));
         dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
         dto.setPassword(user.getPassword());
         dto.setRole(user.getRole());
         dto.setIsActive(user.getIsActive());
@@ -206,6 +207,7 @@ public class UserService {
         User user = new User();
         user.setId(Integer.parseInt(dto.getId()));
         user.setUsername(dto.getUsername());
+        user.setEmail(dto.getEmail());
         user.setRole(dto.getRole());
         user.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);
         return user;

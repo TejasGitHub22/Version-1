@@ -35,6 +35,7 @@ public class DataInitializer implements CommandLineRunner {
         if (!userRepository.findByUsername("Ashutosh").isPresent()) {
             User adminUser = new User();
             adminUser.setUsername("Ashutosh");
+            adminUser.setEmail("admin@coffeeapp.com");
             adminUser.setPassword(passwordEncoder.encode("p@ssword123"));
             adminUser.setRole("ROLE_ADMIN");
             adminUser.setIsActive(true);

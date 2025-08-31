@@ -49,10 +49,16 @@ public class AuthService {
 		
 		if(isUserExisting != null) throw new IllegalArgumentException("User already exists");
 		
+		// Check if email already exists
+		User isEmailExisting = userRepository.findByEmail(signupRequestDto.getEmail()).orElse(null);
+		
+		if(isEmailExisting != null) throw new IllegalArgumentException("Email already exists");
+		
 		String encodedPassword = passwordEncoder.encode(signupRequestDto.getPassword());
 		
 		User newUser = new User(
 				signupRequestDto.getUsername(),
+				signupRequestDto.getEmail(),
 				encodedPassword,
 				signupRequestDto.getRole(),
 				true

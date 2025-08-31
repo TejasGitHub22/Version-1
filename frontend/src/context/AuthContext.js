@@ -24,10 +24,16 @@ export const AuthProvider = ({ children }) => {
     const checkAuthStatus = () => {
         const token = localStorage.getItem('authToken');
         const userId = localStorage.getItem('userId');
+        const userRole = localStorage.getItem('userRole');
+        const userFacilityId = localStorage.getItem('userFacilityId');
         
         if (token && userId) {
             setIsAuthenticated(true);
-            setUser({ id: userId });
+            setUser({ 
+                id: userId, 
+                role: userRole || 'FACILITY',
+                facilityId: userFacilityId 
+            });
         }
         
         setLoading(false);
@@ -41,8 +47,14 @@ export const AuthProvider = ({ children }) => {
             if (response && response.jwt) {
                 localStorage.setItem('authToken', response.jwt);
                 localStorage.setItem('userId', response.userId);
+                localStorage.setItem('userRole', response.role || 'FACILITY');
+                localStorage.setItem('userFacilityId', response.facilityId);
                 
-                setUser({ id: response.userId });
+                setUser({ 
+                    id: response.userId, 
+                    role: response.role || 'FACILITY',
+                    facilityId: response.facilityId 
+                });
                 setIsAuthenticated(true);
                 
                 return { success: true, data: response };
@@ -73,9 +85,15 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         authAPI.logout();
         localStorage.removeItem('userId');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userFacilityId');
         setUser(null);
         setIsAuthenticated(false);
     };
+
+    const isAdmin = () => user?.role === 'ADMIN';
+    const isFacility = () => user?.role === 'FACILITY';
+    const getUserFacilityId = () => user?.facilityId;
 
     const value = {
         user,
@@ -83,7 +101,10 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         signup,
-        logout
+        logout,
+        isAdmin,
+        isFacility,
+        getUserFacilityId
     };
 
     return (

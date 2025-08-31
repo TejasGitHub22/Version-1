@@ -100,7 +100,7 @@ public class MachineSimulatorService {
                     String jsonMessage = objectMapper.writeValueAsString(messageMap);
 
                     // Publish to HiveMQ - let the backend handle real-time updates
-                    String topic = "coffeemachine/" + machineId + "/data";ommnce 
+                    String topic = "coffeemachine/" + machineId + "/data";
                     MqttMessage mqttMessage = new MqttMessage(jsonMessage.getBytes());
                     mqttMessage.setQos(1);
                     mqttClient.publish(topic, mqttMessage);

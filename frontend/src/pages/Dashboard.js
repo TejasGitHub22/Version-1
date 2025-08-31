@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { machinesAPI, facilitiesAPI, alertsAPI, usageAPI } from '../services/api';
 import { usePolling } from '../hooks/useApi';
 import { formatNumber, getLevelColor, getStatusBadge } from '../utils/helpers';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Dashboard = () => {
+    const { user, isAdmin, isFacility, getUserFacilityId } = useAuth();
     const [dashboardData, setDashboardData] = useState({
         totalMachines: 0,
         activeMachines: 0,
@@ -14,20 +16,31 @@ const Dashboard = () => {
         todayUsage: 0,
         recentAlerts: [],
         lowSupplyMachines: [],
-        topFacilities: []
+        topFacilities: [],
+        machineStatuses: [],
+        resourceLevels: []
     });
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // Poll dashboard data every 10 seconds
-    const { data: machinesData } = usePolling(machinesAPI.getAll, 10000);
-    const { data: facilitiesData } = usePolling(facilitiesAPI.getAll, 30000);
-    const { data: alertsData } = usePolling(alertsAPI.getRecent, 5000);
+    // Role-based polling intervals
+    const refreshInterval = isAdmin() ? 60000 : 30000; // 60s for admin, 30s for facility
+    
+    // Poll dashboard data based on user role
+    const { data: machinesData } = usePolling(
+        isAdmin() ? machinesAPI.getAll : () => machinesAPI.getByFacility(getUserFacilityId()), 
+        refreshInterval
+    );
+    const { data: facilitiesData } = usePolling(facilitiesAPI.getAll, refreshInterval);
+    const { data: alertsData } = usePolling(
+        isAdmin() ? alertsAPI.getRecent : () => alertsAPI.getByFacility(getUserFacilityId()), 
+        refreshInterval
+    );
 
     useEffect(() => {
         fetchDashboardData();
-    }, []);
+    }, [user]);
 
     useEffect(() => {
         if (machinesData || facilitiesData || alertsData) {
@@ -40,23 +53,40 @@ const Dashboard = () => {
             setLoading(true);
             setError(null);
 
-            const [machines, facilities, alerts, usage, lowSupply] = await Promise.all([
-                machinesAPI.getAll(),
-                facilitiesAPI.getAll(),
-                alertsAPI.getRecent(24),
-                usageAPI.getToday(),
-                machinesAPI.getLowSupplies()
-            ]);
+            let machines, facilities, alerts, usage, lowSupply;
+
+            if (isAdmin()) {
+                // Admin: Get all data across facilities
+                [machines, facilities, alerts, usage, lowSupply] = await Promise.all([
+                    machinesAPI.getAll(),
+                    facilitiesAPI.getAll(),
+                    alertsAPI.getRecent(24),
+                    usageAPI.getToday(),
+                    machinesAPI.getLowSupplies()
+                ]);
+            } else {
+                // Facility: Get data for specific facility only
+                const facilityId = getUserFacilityId();
+                [machines, facilities, alerts, usage, lowSupply] = await Promise.all([
+                    machinesAPI.getByFacility(facilityId),
+                    facilitiesAPI.getById(facilityId),
+                    alertsAPI.getByFacility(facilityId),
+                    usageAPI.getByFacility(facilityId),
+                    machinesAPI.getLowSuppliesByFacility(facilityId)
+                ]);
+            }
 
             setDashboardData({
                 totalMachines: machines?.length || 0,
                 activeMachines: machines?.filter(m => m.status === 'ON').length || 0,
-                totalFacilities: facilities?.length || 0,
+                totalFacilities: isAdmin() ? (facilities?.length || 0) : 1,
                 activeAlerts: alerts?.length || 0,
                 todayUsage: usage?.length || 0,
                 recentAlerts: alerts?.slice(0, 5) || [],
                 lowSupplyMachines: lowSupply?.slice(0, 5) || [],
-                topFacilities: facilities?.slice(0, 3) || []
+                topFacilities: isAdmin() ? (facilities?.slice(0, 3) || []) : (facilities ? [facilities] : []),
+                machineStatuses: machines || [],
+                resourceLevels: machines || []
             });
         } catch (err) {
             setError('Failed to load dashboard data');
@@ -71,9 +101,11 @@ const Dashboard = () => {
             ...prev,
             totalMachines: machinesData?.length || prev.totalMachines,
             activeMachines: machinesData?.filter(m => m.status === 'ON').length || prev.activeMachines,
-            totalFacilities: facilitiesData?.length || prev.totalFacilities,
+            totalFacilities: isAdmin() ? (facilitiesData?.length || prev.totalFacilities) : prev.totalFacilities,
             activeAlerts: alertsData?.length || prev.activeAlerts,
-            recentAlerts: alertsData?.slice(0, 5) || prev.recentAlerts
+            recentAlerts: alertsData?.slice(0, 5) || prev.recentAlerts,
+            machineStatuses: machinesData || prev.machineStatuses,
+            resourceLevels: machinesData || prev.resourceLevels
         }));
     };
 
@@ -84,6 +116,16 @@ const Dashboard = () => {
     if (error) {
         return (
             <div className="container">
+                <div className="page-header">
+                    <div className="page-title">
+                        <h1>
+                            <i className="fas fa-tachometer-alt"></i>
+                            {isAdmin() ? 'Admin Dashboard' : 'Facility Dashboard'}
+                        </h1>
+                        <p>Real-time coffee machine monitoring and analytics</p>
+                    </div>
+                </div>
+
                 <div className="alert alert-warning" style={{ 
                     background: '#fff3cd', 
                     border: '1px solid #ffeaa7', 
@@ -116,497 +158,533 @@ const Dashboard = () => {
 
     return (
         <div className="container">
-            <div className="dashboard-header">
-                <h1>
-                    <i className="fas fa-tachometer-alt"></i>
-                    Dashboard
-                </h1>
-                <p>Real-time overview of your coffee machine network</p>
-            </div>
-
-            {/* Statistics Cards */}
-            <div className="dashboard-stats">
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ color: '#667eea' }}>
-                        <i className="fas fa-coffee"></i>
-                    </div>
-                    <div className="stat-number">{formatNumber(dashboardData.totalMachines)}</div>
-                    <div className="stat-label">Total Machines</div>
-                    <div className="stat-detail">
-                        {dashboardData.activeMachines} active
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ color: '#28a745' }}>
-                        <i className="fas fa-building"></i>
-                    </div>
-                    <div className="stat-number">{formatNumber(dashboardData.totalFacilities)}</div>
-                    <div className="stat-label">Facilities</div>
-                    <div className="stat-detail">
-                        <Link to="/facilities">View all</Link>
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ color: '#dc3545' }}>
-                        <i className="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div className="stat-number">{formatNumber(dashboardData.activeAlerts)}</div>
-                    <div className="stat-label">Active Alerts</div>
-                    <div className="stat-detail">
-                        <Link to="/alerts">Manage alerts</Link>
-                    </div>
-                </div>
-
-                <div className="stat-card">
-                    <div className="stat-icon" style={{ color: '#17a2b8' }}>
-                        <i className="fas fa-chart-bar"></i>
-                    </div>
-                    <div className="stat-number">{formatNumber(dashboardData.todayUsage)}</div>
-                    <div className="stat-label">Today's Usage</div>
-                    <div className="stat-detail">
-                        <Link to="/usage">View details</Link>
-                    </div>
+            <div className="page-header">
+                <div className="page-title">
+                    <h1>
+                        <i className="fas fa-tachometer-alt"></i>
+                        {isAdmin() ? 'Admin Dashboard' : 'Facility Dashboard'}
+                    </h1>
+                    <p>
+                        {isAdmin() 
+                            ? 'Centralized monitoring across all facilities' 
+                            : 'Real-time coffee machine monitoring for your facility'
+                        }
+                        <span className="refresh-info">
+                            <i className="fas fa-sync-alt"></i> 
+                            Auto-refresh every {isAdmin() ? '60' : '30'} seconds
+                        </span>
+                    </p>
                 </div>
             </div>
 
+            {/* Summary Cards */}
             <div className="row">
-                {/* Recent Alerts */}
-                <div className="col-6">
-                    <div className="card">
-                        <div className="card-header">
-                            <h3 className="card-title">
-                                <i className="fas fa-bell"></i>
-                                Recent Alerts
-                            </h3>
-                            <Link to="/alerts" className="btn btn-sm btn-outline-primary">
-                                View All
-                            </Link>
+                <div className="col-md-3">
+                    <div className="summary-card">
+                        <div className="card-icon">
+                            <i className="fas fa-coffee"></i>
                         </div>
-
-                        {dashboardData.recentAlerts.length === 0 ? (
-                            <div className="empty-state">
-                                <i className="fas fa-check-circle"></i>
-                                <p>No recent alerts</p>
-                            </div>
-                        ) : (
-                            <div className="alerts-list">
-                                {dashboardData.recentAlerts.map((alert) => (
-                                    <div key={alert.id} className="alert-item">
-                                        <div className="alert-icon">
-                                            <i className={getAlertIcon(alert.alertType)}></i>
-                                        </div>
-                                        <div className="alert-content">
-                                            <div className="alert-message">{alert.message}</div>
-                                            <div className="alert-meta">
-                                                Machine #{alert.machineId} • {getTimeAgo(alert.timestamp)}
-                                            </div>
-                                        </div>
-                                        <div className={`alert-severity ${getAlertSeverity(alert.alertType)}`}>
-                                            {alert.alertType}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        <div className="card-content">
+                            <h3>{dashboardData.totalMachines}</h3>
+                            <p>Total Machines</p>
+                        </div>
                     </div>
                 </div>
+                <div className="col-md-3">
+                    <div className="summary-card">
+                        <div className="card-icon active">
+                            <i className="fas fa-power-off"></i>
+                        </div>
+                        <div className="card-content">
+                            <h3>{dashboardData.activeMachines}</h3>
+                            <p>Active Machines</p>
+                        </div>
+                    </div>
+                </div>
+                {isAdmin() && (
+                    <div className="col-md-3">
+                        <div className="summary-card">
+                            <div className="card-icon facility">
+                                <i className="fas fa-building"></i>
+                            </div>
+                            <div className="card-content">
+                                <h3>{dashboardData.totalFacilities}</h3>
+                                <p>Total Facilities</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                <div className="col-md-3">
+                    <div className="summary-card">
+                        <div className="card-icon alert">
+                            <i className="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div className="card-content">
+                            <h3>{dashboardData.activeAlerts}</h3>
+                            <p>Active Alerts</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                {/* Low Supply Machines */}
-                <div className="col-6">
+            {/* Machine Status Grid */}
+            <div className="row">
+                <div className="col-12">
                     <div className="card">
                         <div className="card-header">
                             <h3 className="card-title">
-                                <i className="fas fa-exclamation-triangle"></i>
-                                Low Supply Machines
+                                <i className="fas fa-list"></i> 
+                                {isAdmin() ? 'All Coffee Machines' : 'Facility Coffee Machines'}
                             </h3>
-                            <Link to="/machines?filter=low-supplies" className="btn btn-sm btn-outline-warning">
-                                View All
-                            </Link>
                         </div>
-
-                        {dashboardData.lowSupplyMachines.length === 0 ? (
-                            <div className="empty-state">
-                                <i className="fas fa-check-circle"></i>
-                                <p>All machines have adequate supplies</p>
-                            </div>
-                        ) : (
-                            <div className="machines-list">
-                                {dashboardData.lowSupplyMachines.map((machine) => (
-                                    <div key={machine.id} className="machine-item">
+                        <div className="card-body">
+                            <div className="machine-grid">
+                                {dashboardData.machineStatuses.map((machine) => (
+                                    <div key={machine.id} className="machine-card">
+                                        <div className="machine-header">
+                                            <h4>{machine.name}</h4>
+                                            {getStatusBadge(machine.status)}
+                                        </div>
                                         <div className="machine-info">
-                                            <div className="machine-name">
-                                                <Link to={`/machines/${machine.id}`}>
-                                                    Machine #{machine.id}
-                                                </Link>
+                                            <div className="info-item">
+                                                <span className="label">Facility:</span>
+                                                <span className="value">{machine.facilityName || `ID: ${machine.facilityId}`}</span>
                                             </div>
-                                            <div className="machine-facility">
-                                                {machine.facilityName}
+                                            <div className="info-item">
+                                                <span className="label">Temperature:</span>
+                                                <span className="value">{machine.temperature}°C</span>
                                             </div>
                                         </div>
-                                        <div className="machine-levels">
-                                            <div className="level-item">
-                                                <span>Water</span>
-                                                <div className="level-bar">
+                                        <div className="resource-levels">
+                                            <div className="resource-item">
+                                                <i className="fas fa-tint"></i>
+                                                <div className="progress-bar">
                                                     <div 
-                                                        className={`level-fill ${getLevelColor(machine.waterLevel)}`}
+                                                        className="progress-fill water" 
                                                         style={{ width: `${machine.waterLevel}%` }}
                                                     ></div>
                                                 </div>
-                                                <span>{Math.round(machine.waterLevel)}%</span>
+                                                <span>{machine.waterLevel}%</span>
                                             </div>
-                                            <div className="level-item">
-                                                <span>Beans</span>
-                                                <div className="level-bar">
+                                            <div className="resource-item">
+                                                <i className="fas fa-milk"></i>
+                                                <div className="progress-bar">
                                                     <div 
-                                                        className={`level-fill ${getLevelColor(machine.beansLevel)}`}
+                                                        className="progress-fill milk" 
+                                                        style={{ width: `${machine.milkLevel}%` }}
+                                                    ></div>
+                                                </div>
+                                                <span>{machine.milkLevel}%</span>
+                                            </div>
+                                            <div className="resource-item">
+                                                <i className="fas fa-seedling"></i>
+                                                <div className="progress-bar">
+                                                    <div 
+                                                        className="progress-fill beans" 
                                                         style={{ width: `${machine.beansLevel}%` }}
                                                     ></div>
                                                 </div>
-                                                <span>{Math.round(machine.beansLevel)}%</span>
+                                                <span>{machine.beansLevel}%</span>
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
-                        )}
+                        </div>
                     </div>
                 </div>
             </div>
 
+            {/* Alerts and Usage */}
+            <div className="row">
+                <div className="col-md-6">
+                    <div className="card">
+                        <div className="card-header">
+                            <h3 className="card-title">
+                                <i className="fas fa-exclamation-triangle"></i> Recent Alerts
+                            </h3>
+                        </div>
+                        <div className="card-body">
+                            <div className="alert-list">
+                                {dashboardData.recentAlerts.length > 0 ? (
+                                    dashboardData.recentAlerts.map((alert, index) => (
+                                        <div key={index} className="alert-item">
+                                            <div className="alert-icon">
+                                                <i className="fas fa-exclamation-circle"></i>
+                                            </div>
+                                            <div className="alert-content">
+                                                <div className="alert-title">{alert.alertType}</div>
+                                                <div className="alert-message">{alert.message}</div>
+                                                <div className="alert-time">
+                                                    {new Date(alert.timestamp).toLocaleString()}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="no-alerts">
+                                        <i className="fas fa-check-circle"></i>
+                                        <p>No active alerts</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="col-md-6">
+                    <div className="card">
+                        <div className="card-header">
+                            <h3 className="card-title">
+                                <i className="fas fa-chart-bar"></i> Today's Usage
+                            </h3>
+                        </div>
+                        <div className="card-body">
+                            <div className="usage-summary">
+                                <div className="usage-stat">
+                                    <div className="stat-number">{dashboardData.todayUsage}</div>
+                                    <div className="stat-label">Total Brews Today</div>
+                                </div>
+                                <div className="usage-breakdown">
+                                    <Link to="/usage" className="btn btn-outline-primary">
+                                        <i className="fas fa-chart-line"></i> View Detailed Analytics
+                                    </Link>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Low Supply Machines */}
+            {dashboardData.lowSupplyMachines.length > 0 && (
+                <div className="row">
+                    <div className="col-12">
+                        <div className="card">
+                            <div className="card-header">
+                                <h3 className="card-title">
+                                    <i className="fas fa-exclamation-triangle"></i> Low Supply Machines
+                                </h3>
+                            </div>
+                            <div className="card-body">
+                                <div className="low-supply-grid">
+                                    {dashboardData.lowSupplyMachines.map((machine) => (
+                                        <div key={machine.id} className="low-supply-item">
+                                            <div className="machine-name">{machine.name}</div>
+                                            <div className="supply-warnings">
+                                                {machine.waterLevel < 30 && (
+                                                    <span className="warning water">Low Water</span>
+                                                )}
+                                                {machine.milkLevel < 30 && (
+                                                    <span className="warning milk">Low Milk</span>
+                                                )}
+                                                {machine.beansLevel < 30 && (
+                                                    <span className="warning beans">Low Beans</span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <style jsx>{`
-                .dashboard-header {
+                .page-header {
                     margin-bottom: 30px;
-                    text-align: center;
                 }
 
-                .dashboard-header h1 {
+                .page-title h1 {
                     color: white;
                     font-size: 2.5rem;
                     font-weight: 700;
                     margin-bottom: 10px;
                     display: flex;
                     align-items: center;
-                    justify-content: center;
                     gap: 15px;
                 }
 
-                .dashboard-header p {
+                .page-title p {
                     color: rgba(255, 255, 255, 0.8);
                     font-size: 1.1rem;
                     margin: 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
                 }
 
-                .dashboard-stats {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                    gap: 20px;
+                .refresh-info {
+                    font-size: 0.9rem;
+                    color: rgba(255, 255, 255, 0.6);
+                    background: rgba(255, 255, 255, 0.1);
+                    padding: 5px 10px;
+                    border-radius: 15px;
+                }
+
+                .row {
                     margin-bottom: 30px;
                 }
 
-                .stat-card {
-                    background: rgba(255, 255, 255, 0.95);
-                    border-radius: 15px;
-                    padding: 25px;
-                    text-align: center;
-                    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-                    backdrop-filter: blur(10px);
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                    transition: transform 0.3s ease;
+                .summary-card {
+                    background: white;
+                    border-radius: 12px;
+                    padding: 20px;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
                 }
 
-                .stat-card:hover {
-                    transform: translateY(-5px);
+                .card-icon {
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 1.5rem;
+                    background: #6c757d;
                 }
 
-                .stat-icon {
-                    font-size: 3rem;
-                    margin-bottom: 15px;
-                    opacity: 0.8;
-                }
+                .card-icon.active { background: #28a745; }
+                .card-icon.facility { background: #007bff; }
+                .card-icon.alert { background: #dc3545; }
 
-                .stat-number {
-                    font-size: 2.5rem;
+                .card-content h3 {
+                    margin: 0;
+                    font-size: 2rem;
                     font-weight: 700;
-                    margin-bottom: 10px;
                     color: #495057;
                 }
 
-                .stat-label {
-                    color: #6c757d;
-                    font-weight: 600;
-                    margin-bottom: 5px;
-                }
-
-                .stat-detail {
+                .card-content p {
+                    margin: 0;
                     color: #6c757d;
                     font-size: 0.9rem;
                 }
 
-                .stat-detail a {
-                    color: #667eea;
-                    text-decoration: none;
+                .machine-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                    gap: 20px;
                 }
 
-                .card-header {
+                .machine-card {
+                    background: #f8f9fa;
+                    border-radius: 8px;
+                    padding: 20px;
+                    border-left: 4px solid #007bff;
+                }
+
+                .machine-header {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    border-bottom: 2px solid #f8f9fa;
-                    padding-bottom: 15px;
-                    margin-bottom: 20px;
+                    margin-bottom: 15px;
                 }
 
-                .card-title {
-                    color: #495057;
-                    font-size: 1.25rem;
-                    font-weight: 600;
+                .machine-header h4 {
                     margin: 0;
+                    color: #495057;
+                }
+
+                .machine-info {
+                    margin-bottom: 15px;
+                }
+
+                .info-item {
+                    display: flex;
+                    justify-content: space-between;
+                    margin-bottom: 8px;
+                }
+
+                .label {
+                    color: #6c757d;
+                    font-weight: 500;
+                }
+
+                .value {
+                    color: #495057;
+                    font-weight: 600;
+                }
+
+                .resource-levels {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                }
+
+                .resource-item {
                     display: flex;
                     align-items: center;
                     gap: 10px;
                 }
 
-                .empty-state {
-                    text-align: center;
-                    padding: 40px 20px;
+                .resource-item i {
+                    width: 20px;
                     color: #6c757d;
                 }
 
-                .empty-state i {
-                    font-size: 3rem;
-                    color: #28a745;
-                    margin-bottom: 15px;
+                .progress-bar {
+                    flex: 1;
+                    height: 8px;
+                    background: #e9ecef;
+                    border-radius: 4px;
+                    overflow: hidden;
                 }
 
-                .alerts-list,
-                .machines-list {
-                    max-height: 400px;
+                .progress-fill {
+                    height: 100%;
+                    border-radius: 4px;
+                    transition: width 0.3s ease;
+                }
+
+                .progress-fill.water { background: #007bff; }
+                .progress-fill.milk { background: #ffc107; }
+                .progress-fill.beans { background: #28a745; }
+
+                .alert-list {
+                    max-height: 300px;
                     overflow-y: auto;
                 }
 
                 .alert-item {
                     display: flex;
-                    align-items: center;
+                    align-items: flex-start;
                     gap: 15px;
                     padding: 15px;
                     border-bottom: 1px solid #e9ecef;
                 }
 
-                .alert-item:last-child {
-                    border-bottom: none;
-                }
-
                 .alert-icon {
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 50%;
-                    background: rgba(220, 53, 69, 0.1);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
                     color: #dc3545;
+                    font-size: 1.2rem;
+                    margin-top: 2px;
                 }
 
                 .alert-content {
                     flex: 1;
                 }
 
-                .alert-message {
-                    font-weight: 500;
+                .alert-title {
+                    font-weight: 600;
                     color: #495057;
                     margin-bottom: 5px;
                 }
 
-                .alert-meta {
-                    font-size: 0.85rem;
+                .alert-message {
                     color: #6c757d;
+                    font-size: 0.9rem;
+                    margin-bottom: 5px;
                 }
 
-                .alert-severity {
-                    padding: 4px 8px;
-                    border-radius: 4px;
-                    font-size: 0.75rem;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                }
-
-                .alert-severity.critical {
-                    background: #dc3545;
-                    color: white;
-                }
-
-                .alert-severity.warning {
-                    background: #ffc107;
-                    color: #212529;
-                }
-
-                .alert-severity.info {
-                    background: #17a2b8;
-                    color: white;
-                }
-
-                .machine-item {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    padding: 15px;
-                    border-bottom: 1px solid #e9ecef;
-                }
-
-                .machine-item:last-child {
-                    border-bottom: none;
-                }
-
-                .machine-info {
-                    flex: 1;
-                }
-
-                .machine-name a {
-                    color: #667eea;
-                    text-decoration: none;
-                    font-weight: 600;
-                }
-
-                .machine-name a:hover {
-                    text-decoration: underline;
-                }
-
-                .machine-facility {
-                    font-size: 0.85rem;
+                .alert-time {
                     color: #6c757d;
-                    margin-top: 2px;
-                }
-
-                .machine-levels {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 8px;
-                    min-width: 150px;
-                }
-
-                .level-item {
-                    display: flex;
-                    align-items: center;
-                    gap: 8px;
                     font-size: 0.8rem;
                 }
 
-                .level-item span:first-child {
-                    width: 40px;
-                    text-align: right;
+                .no-alerts {
+                    text-align: center;
+                    padding: 40px;
                     color: #6c757d;
                 }
 
-                .level-item span:last-child {
-                    width: 35px;
-                    text-align: right;
+                .no-alerts i {
+                    font-size: 3rem;
+                    color: #28a745;
+                    margin-bottom: 15px;
+                }
+
+                .usage-summary {
+                    text-align: center;
+                    padding: 20px;
+                }
+
+                .usage-stat {
+                    margin-bottom: 20px;
+                }
+
+                .stat-number {
+                    font-size: 3rem;
+                    font-weight: 700;
+                    color: #007bff;
+                    margin-bottom: 10px;
+                }
+
+                .stat-label {
+                    color: #6c757d;
+                    font-size: 1.1rem;
+                }
+
+                .low-supply-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 15px;
+                }
+
+                .low-supply-item {
+                    background: #fff3cd;
+                    border: 1px solid #ffeaa7;
+                    border-radius: 8px;
+                    padding: 15px;
+                }
+
+                .machine-name {
                     font-weight: 600;
+                    color: #856404;
+                    margin-bottom: 10px;
                 }
 
-                .level-bar {
-                    flex: 1;
-                    height: 6px;
-                    background: #e9ecef;
-                    border-radius: 3px;
-                    overflow: hidden;
+                .supply-warnings {
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 8px;
                 }
 
-                .level-fill {
-                    height: 100%;
-                    transition: width 0.3s ease;
+                .warning {
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 0.8rem;
+                    font-weight: 500;
                 }
 
-                .level-fill.high { background: #28a745; }
-                .level-fill.medium { background: #ffc107; }
-                .level-fill.low { background: #dc3545; }
+                .warning.water { background: #d1ecf1; color: #0c5460; }
+                .warning.milk { background: #fff3cd; color: #856404; }
+                .warning.beans { background: #d4edda; color: #155724; }
 
-                @media (max-width: 768px) {
-                    .dashboard-header h1 {
-                        font-size: 2rem;
-                    }
+                .btn {
+                    padding: 8px 16px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 0.9rem;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    text-decoration: none;
+                }
 
-                    .dashboard-stats {
-                        grid-template-columns: 1fr;
-                    }
+                .btn-primary {
+                    background: #007bff;
+                    color: white;
+                }
 
-                    .row .col-6 {
-                        flex: 0 0 100%;
-                        max-width: 100%;
-                    }
+                .btn-outline-primary {
+                    background: transparent;
+                    color: #007bff;
+                    border: 1px solid #007bff;
+                }
 
-                    .machine-item {
-                        flex-direction: column;
-                        align-items: flex-start;
-                        gap: 10px;
-                    }
-
-                    .machine-levels {
-                        width: 100%;
-                    }
+                .btn-outline-primary:hover {
+                    background: #007bff;
+                    color: white;
                 }
             `}</style>
         </div>
     );
-};
-
-// Helper functions (since we can't import them in JSX style blocks)
-const getAlertIcon = (alertType) => {
-    switch (alertType?.toUpperCase()) {
-        case 'LOW_WATER':
-            return 'fas fa-tint';
-        case 'LOW_MILK':
-            return 'fas fa-glass-whiskey';
-        case 'LOW_BEANS':
-        case 'LOW_SUGAR':
-            return 'fas fa-seedling';
-        case 'MALFUNCTION':
-            return 'fas fa-exclamation-triangle';
-        case 'MAINTENANCE':
-            return 'fas fa-tools';
-        case 'OFFLINE':
-            return 'fas fa-power-off';
-        default:
-            return 'fas fa-bell';
-    }
-};
-
-const getAlertSeverity = (alertType) => {
-    switch (alertType?.toUpperCase()) {
-        case 'MALFUNCTION':
-        case 'OFFLINE':
-        case 'EMERGENCY':
-            return 'critical';
-        case 'LOW_WATER':
-        case 'LOW_MILK':
-        case 'LOW_BEANS':
-        case 'LOW_SUGAR':
-            return 'warning';
-        case 'MAINTENANCE':
-            return 'info';
-        default:
-            return 'info';
-    }
-};
-
-const getTimeAgo = (dateString) => {
-    if (!dateString) return 'N/A';
-    
-    try {
-        const date = new Date(dateString);
-        const now = new Date();
-        const diffInSeconds = Math.floor((now - date) / 1000);
-        
-        if (diffInSeconds < 60) return 'Just now';
-        if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-        if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-        if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} days ago`;
-        
-        return date.toLocaleDateString();
-    } catch (error) {
-        return 'Invalid Date';
-    }
 };
 
 export default Dashboard;

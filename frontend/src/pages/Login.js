@@ -7,6 +7,7 @@ const Login = () => {
     const [isLogin, setIsLogin] = useState(true);
     const [formData, setFormData] = useState({
         username: '',
+        email: '',
         password: '',
         role: 'ROLE_ADMIN'
     });
@@ -39,6 +40,12 @@ const Login = () => {
             newErrors.username = 'Username is required';
         }
 
+        if (!isLogin && !formData.email.trim()) {
+            newErrors.email = 'Email is required';
+        } else if (!isLogin && formData.email.trim() && !isValidEmail(formData.email)) {
+            newErrors.email = 'Please enter a valid email address';
+        }
+
         if (!formData.password.trim()) {
             newErrors.password = 'Password is required';
         } else if (formData.password.length < 6) {
@@ -51,6 +58,11 @@ const Login = () => {
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
+    };
+
+    const isValidEmail = (email) => {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
     };
 
     const handleSubmit = async (e) => {
@@ -72,6 +84,7 @@ const Login = () => {
             } else {
                 result = await signup({
                     username: formData.username,
+                    email: formData.email,
                     password: formData.password,
                     role: formData.role
                 });
@@ -83,7 +96,7 @@ const Login = () => {
                 } else {
                     // After successful signup, switch to login
                     setIsLogin(true);
-                    setFormData(prev => ({ ...prev, password: '' }));
+                    setFormData(prev => ({ ...prev, password: '', email: '' }));
                     alert('Account created successfully! Please log in.');
                 }
             } else {
@@ -134,6 +147,25 @@ const Login = () => {
                         />
                         {errors.username && <span className="error-text">{errors.username}</span>}
                     </div>
+
+                    {!isLogin && (
+                        <div className="form-group">
+                            <label htmlFor="email" className="form-label">
+                                <i className="fas fa-envelope"></i>
+                                Email
+                            </label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                className={`form-control ${errors.email ? 'error' : ''}`}
+                                value={formData.email}
+                                onChange={handleChange}
+                                placeholder="Enter your email address"
+                            />
+                            {errors.email && <span className="error-text">{errors.email}</span>}
+                        </div>
+                    )}
 
                     <div className="form-group">
                         <label htmlFor="password" className="form-label">
@@ -195,7 +227,7 @@ const Login = () => {
                                 onClick={() => {
                                     setIsLogin(!isLogin);
                                     setErrors({});
-                                    setFormData(prev => ({ ...prev, password: '' }));
+                                    setFormData(prev => ({ ...prev, password: '', email: '' }));
                                 }}
                             >
                                 {isLogin ? 'Sign Up' : 'Sign In'}

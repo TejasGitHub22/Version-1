@@ -47,20 +47,20 @@ const Usage = () => {
     }
 
     if (error) {
-        return (
-            <div className="container">
-                <div className="page-header">
-                    <div className="page-title">
-                        <h1>
-                            <i className="fas fa-chart-bar"></i>
-                            Usage History
-                        </h1>
-                        <p>View coffee brewing history and usage statistics</p>
-                    </div>
+    return (
+        <div className="container">
+            <div className="page-header">
+                <div className="page-title">
+                    <h1>
+                        <i className="fas fa-chart-bar"></i>
+                        Usage History
+                    </h1>
+                    <p>View coffee brewing history and usage statistics</p>
                 </div>
+            </div>
 
-                <div className="card">
-                    <div className="card-header">
+            <div className="card">
+                <div className="card-header">
                         <h3 className="card-title">Error</h3>
                     </div>
                     <div className="card-body">
@@ -284,7 +284,7 @@ const Usage = () => {
                                 ))}
                             </div>
                         </div>
-                    </div>
+                </div>
                 </div>
             </div>
 

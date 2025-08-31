@@ -14,6 +14,10 @@ public class UserDto {
     @NotBlank(message = "Username is required")
     private String username;
     
+    @NotBlank(message = "Email is required")
+    @Pattern(regexp = "^[A-Za-z0-9+_.-]+@(.+)$", message = "Please provide a valid email address")
+    private String email;
+    
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @NotBlank(message = "Password is required")
     private String password;
@@ -30,9 +34,10 @@ public class UserDto {
     //included password attribute
     public UserDto() {}
     
-    public UserDto(String id, String username, String password, String role) {
+    public UserDto(String id, String username, String email, String password, String role) {
         this.id = id;
         this.username = username;
+        this.email = email;
         this.password = password;
         this.role = role;
         this.isActive = true;
@@ -53,6 +58,14 @@ public class UserDto {
     
     public void setUsername(String username) {
         this.username = username;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
     }
     
     //Getter for password...

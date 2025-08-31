@@ -26,6 +26,10 @@ public class User implements UserDetails {
 	@Column(name = "username", nullable = false)
 	private String username;
 
+	@NotBlank(message = "Email is required")
+	@Column(name = "email", nullable = false, unique = true)
+	private String email;
+
 	@NotBlank(message = "Password is required")
 	@Column(name = "password", nullable = false)
 	private String password;
@@ -57,11 +61,13 @@ public class User implements UserDetails {
 	}
 
 	public User(@NotBlank(message = "Username is required") String username,
+			@NotBlank(message = "Email is required") String email,
 			@NotBlank(message = "Password is required") String password,
 			@NotNull(message = "Role is required") String role,
 			@NotNull(message = "Active status is required") Boolean isActive) {
 		super();
 		this.username = username;
+		this.email = email;
 		this.password = password;
 		this.role = Role.valueOf(role);
 		this.isActive = isActive;
@@ -83,6 +89,14 @@ public class User implements UserDetails {
 
 	public void setUsername(String username) {
 		this.username = username;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 
 	public String getPassword() {
