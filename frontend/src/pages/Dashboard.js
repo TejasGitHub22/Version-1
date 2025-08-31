@@ -84,12 +84,31 @@ const Dashboard = () => {
     if (error) {
         return (
             <div className="container">
-                <div className="alert alert-danger">
-                    <i className="fas fa-exclamation-triangle"></i>
-                    {error}
-                    <button onClick={fetchDashboardData} className="btn btn-sm btn-outline-danger" style={{ marginLeft: '10px' }}>
-                        Retry
-                    </button>
+                <div className="alert alert-warning" style={{ 
+                    background: '#fff3cd', 
+                    border: '1px solid #ffeaa7', 
+                    color: '#856404',
+                    padding: '20px',
+                    borderRadius: '8px',
+                    marginBottom: '30px'
+                }}>
+                    <i className="fas fa-info-circle" style={{ marginRight: '10px' }}></i>
+                    <strong>Dashboard Data Unavailable</strong>
+                    <p style={{ margin: '10px 0', fontSize: '1rem' }}>
+                        The backend service is not responding or doesn't have data yet. 
+                        This usually happens when the system is first starting up.
+                    </p>
+                    <div style={{ marginTop: '15px' }}>
+                        <button onClick={fetchDashboardData} className="btn btn-primary" style={{ marginRight: '10px' }}>
+                            <i className="fas fa-redo"></i> Retry Dashboard
+                        </button>
+                        <Link to="/usage" className="btn btn-success">
+                            <i className="fas fa-chart-bar"></i> View Analytics
+                        </Link>
+                    </div>
+                    <div style={{ marginTop: '15px', fontSize: '0.9rem', color: '#6c757d' }}>
+                        <strong>Note:</strong> The Usage page shows real-time analytics data from the simulator and should work even when the backend is unavailable.
+                    </div>
                 </div>
             </div>
         );

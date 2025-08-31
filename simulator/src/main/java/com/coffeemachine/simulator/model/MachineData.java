@@ -2,54 +2,67 @@ package com.coffeemachine.simulator.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "simulation_data")
+@Table(name = "machine_analytics")
 @Data
 public class MachineData {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Integer id;
 
-    @Column(name = "message", nullable = false)
-    private String message;
-    
-	public Integer getId() {
-		return id;
-	}
+	@Column(name = "machine_id", nullable = false)
+	private Integer machineId;
 
-	public void setId(Integer id) {
-		this.id = id;
-	}
+	@Column(name = "facility_id", nullable = false)
+	private Integer facilityId;
 
-	public String getMessage() {
-		return message;
-	}
+	@Column(name = "status", nullable = false)
+	private String status;
 
-	public void setMessage(String message) {
-		this.message = message;
-	}
-	
+	@Column(name = "temperature")
+	private Double temperature;
+
+	@Column(name = "water_level")
+	private Double waterLevel;
+
+	@Column(name = "milk_level")
+	private Double milkLevel;
+
+	@Column(name = "beans_level")
+	private Double beansLevel;
+
+	@Column(name = "sugar_level")
+	private Double sugarLevel;
+
+	@Column(name = "brew_type")
+	private String brewType;
+
+	@Column(name = "timestamp", nullable = false)
+	private LocalDateTime timestamp;
+
+	@Column(name = "created_at", nullable = false)
+	private LocalDateTime createdAt;
+
 	public MachineData() {
-		
-	}
-	
-	public MachineData(int id, String message) {
-		this.id = id;
-		this.message = message;
+		this.createdAt = LocalDateTime.now();
 	}
 
-	public String toJson() {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(this);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-            return "{}";
-        }
-    }
+	public MachineData(Integer machineId, Integer facilityId, String status, Double temperature,
+			Double waterLevel, Double milkLevel, Double beansLevel, Double sugarLevel,
+			String brewType) {
+		this();
+		this.machineId = machineId;
+		this.facilityId = facilityId;
+		this.status = status;
+		this.temperature = temperature;
+		this.waterLevel = waterLevel;
+		this.milkLevel = milkLevel;
+		this.beansLevel = beansLevel;
+		this.sugarLevel = sugarLevel;
+		this.brewType = brewType;
+		this.timestamp = LocalDateTime.now();
+	}
 }

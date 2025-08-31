@@ -17,48 +17,48 @@ import java.util.List;
 @Table(name = "User")
 public class User implements UserDetails {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Integer id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "id")
+	private Integer id;
 
-    @NotBlank(message = "Username is required")
-    @Column(name = "username", nullable = false)
-    private String username;
+	@NotBlank(message = "Username is required")
+	@Column(name = "username", nullable = false)
+	private String username;
 
-    @NotBlank(message = "Password is required")
-    @Column(name = "password", nullable = false)
-    private String password;
+	@NotBlank(message = "Password is required")
+	@Column(name = "password", nullable = false)
+	private String password;
 
-    @Enumerated(EnumType.STRING)
-    @NotBlank(message = "Role is required")
-    @Column(name = "role", nullable = false)
-    private Role role;
+	@Enumerated(EnumType.STRING)
+	@NotNull(message = "Role is required")
+	@Column(name = "role", nullable = false)
+	private Role role;
 
-    @NotNull(message = "Active status is required")
-    @Column(name = "isActive", nullable = false)
-    private Boolean isActive = true;
+	@NotNull(message = "Active status is required")
+	@Column(name = "isActive", nullable = false)
+	private Boolean isActive = true;
 
-    @CreationTimestamp
-    @Column(name = "creationDate", nullable = false, updatable = false)
-    private LocalDateTime creationDate;
+	@CreationTimestamp
+	@Column(name = "creationDate", nullable = false, updatable = false)
+	private LocalDateTime creationDate;
 
-    @UpdateTimestamp
-    @Column(name = "lastUpdate", nullable = false)
-    private LocalDateTime lastUpdate;
-    
-    //enums...
-    public enum Role{
-    	ROLE_ADMIN, ROLE_TECHNICIAN
-    }
-    
-    public User() {
-    	
+	@UpdateTimestamp
+	@Column(name = "lastUpdate", nullable = false)
+	private LocalDateTime lastUpdate;
+
+	// enums...
+	public enum Role {
+		ROLE_ADMIN, ROLE_TECHNICIAN
+	}
+
+	public User() {
+
 	}
 
 	public User(@NotBlank(message = "Username is required") String username,
 			@NotBlank(message = "Password is required") String password,
-			@NotBlank(message = "Role is required") String role,
+			@NotNull(message = "Role is required") String role,
 			@NotNull(message = "Active status is required") Boolean isActive) {
 		super();
 		this.username = username;
@@ -126,16 +126,16 @@ public class User implements UserDetails {
 	}
 
 	@Override
-    public String toString() {
-        return "User{" +
-                "id='" + id + '\'' +
-                ", username='" + username + '\'' +
-                ", role='" + role + '\'' +
-                ", isActive=" + isActive +
-                ", creationDate=" + creationDate +
-                ", lastUpdate=" + lastUpdate +
-                '}';
-    }
+	public String toString() {
+		return "User{" +
+				"id='" + id + '\'' +
+				", username='" + username + '\'' +
+				", role='" + role + '\'' +
+				", isActive=" + isActive +
+				", creationDate=" + creationDate +
+				", lastUpdate=" + lastUpdate +
+				'}';
+	}
 
 	@Override
 	public Collection<? extends GrantedAuthority> getAuthorities() {

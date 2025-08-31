@@ -1,0 +1,9 @@
+com\coffeemachine\simulator\repository\CoffeeMachineRepository.class
+com\coffeemachine\simulator\MqttSimulator.class
+com\coffeemachine\simulator\service\MachineSimulatorService.class
+com\coffeemachine\simulator\model\MachineData.class
+com\coffeemachine\simulator\controller\AnalyticsController.class
+com\coffeemachine\simulator\repository\MachineDataRepository.class
+com\coffeemachine\simulator\MqttUtils.class
+com\coffeemachine\simulator\model\CoffeeMachine.class
+com\coffeemachine\simulator\config\SimulatorDataInitializer.class

@@ -12,22 +12,22 @@ import com.coffee.coffeeApp.dto.SignupResponseDto;
 import com.coffee.coffeeApp.dto.SignupRequestDto;
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class AuthController {
-	
+
 	private final AuthService authService;
-	
+
 	public AuthController(AuthService authService) {
 		this.authService = authService;
 	}
-	
+
 	@PostMapping("/login")
-	public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto){
+	public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto) {
 		return ResponseEntity.ok(authService.login(loginRequestDto));
 	}
-	
+
 	@PostMapping("/signup")
-	public ResponseEntity<SignupResponseDto> signup(@RequestBody SignupRequestDto signupRequestDto){
+	public ResponseEntity<SignupResponseDto> signup(@RequestBody SignupRequestDto signupRequestDto) {
 		return ResponseEntity.ok(authService.signup(signupRequestDto));
 	}
 }

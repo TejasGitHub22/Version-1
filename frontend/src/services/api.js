@@ -48,7 +48,7 @@ const apiRequest = async (url, options = {}) => {
 // Authentication API
 export const authAPI = {
     login: async (credentials) => {
-        const data = await apiRequest('/auth/login', {
+        const data = await apiRequest('/api/auth/login', {
             method: 'POST',
             body: JSON.stringify(credentials),
         });
@@ -61,7 +61,7 @@ export const authAPI = {
     },
 
     signup: async (userData) => {
-        return await apiRequest('/auth/signup', {
+        return await apiRequest('/api/auth/signup', {
             method: 'POST',
             body: JSON.stringify(userData),
         });
