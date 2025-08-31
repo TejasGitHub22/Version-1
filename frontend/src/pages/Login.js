@@ -92,7 +92,7 @@ const Login = () => {
 
             if (result.success) {
                 if (isLogin) {
-                    navigate('/dashboard');
+                    navigate('/locations');
                 } else {
                     // After successful signup, switch to login
                     setIsLogin(true);

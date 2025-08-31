@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { usageAPI } from '../services/api';
 
 const Usage = () => {
     const [analyticsData, setAnalyticsData] = useState(null);
@@ -9,6 +10,32 @@ const Usage = () => {
     useEffect(() => {
         fetchAnalyticsData();
     }, []);
+
+    const [todayUsage, setTodayUsage] = useState([]);
+    useEffect(() => {
+        const load = async () => {
+            try {
+                const data = await usageAPI.getToday();
+                setTodayUsage(data || []);
+            } catch (_) {}
+        };
+        load();
+        const t = setInterval(load, 15000);
+        return () => clearInterval(t);
+    }, []);
+
+    const totalCupsToday = todayUsage.length;
+    const peakHour = useMemo(() => {
+        const counts = {};
+        for (const u of todayUsage) {
+            if (!u.timestamp) continue;
+            const hour = new Date(u.timestamp).getHours();
+            counts[hour] = (counts[hour] || 0) + 1;
+        }
+        let maxH = null, maxC = 0;
+        Object.entries(counts).forEach(([h, c]) => { if (c > maxC) { maxC = c; maxH = h; } });
+        return maxH !== null ? { hour: Number(maxH), count: maxC } : null;
+    }, [todayUsage]);
 
     const fetchAnalyticsData = async () => {
         try {
@@ -86,6 +113,28 @@ const Usage = () => {
                         Usage History & Analytics
                     </h1>
                     <p>Real-time coffee machine usage statistics and analytics</p>
+                </div>
+            </div>
+
+            {/* Today Summary */}
+            <div className="row">
+                <div className="col-md-6">
+                    <div className="card">
+                        <div className="card-header"><h3 className="card-title"><i className="fas fa-mug-hot"></i> Cups Brewed Today</h3></div>
+                        <div className="card-body" style={{ fontSize:'2rem', fontWeight:700 }}>{totalCupsToday}</div>
+                    </div>
+                </div>
+                <div className="col-md-6">
+                    <div className="card">
+                        <div className="card-header"><h3 className="card-title"><i className="fas fa-clock"></i> Peak Hour</h3></div>
+                        <div className="card-body" style={{ fontSize:'1.25rem' }}>
+                            {peakHour ? (
+                                <>
+                                    <strong>{peakHour.hour}:00</strong> with {peakHour.count} brews
+                                </>
+                            ) : 'No data yet'}
+                        </div>
+                    </div>
                 </div>
             </div>
 
