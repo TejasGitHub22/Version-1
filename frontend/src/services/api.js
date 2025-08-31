@@ -32,7 +32,11 @@ const apiRequest = async (url, options = {}) => {
             return null;
         }
 
-        const data = await response.json();
+        // Parse response based on content type
+        const contentType = response.headers.get('content-type') || '';
+        const data = contentType.includes('application/json')
+            ? await response.json()
+            : await response.text();
         
         if (!response.ok) {
             throw new Error(data.message || `HTTP error! status: ${response.status}`);

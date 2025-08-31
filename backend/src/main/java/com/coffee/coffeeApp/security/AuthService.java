@@ -41,7 +41,12 @@ public class AuthService {
 		//getting the JWT token...
 		String token = authUtil.generateAccessToken(user);
 		
-		return new LoginResponseDto(token, user.getId().toString());
+		// Normalize role to simple form for frontend (e.g., ROLE_ADMIN -> ADMIN)
+		String simpleRole = user.getRole();
+		if (simpleRole != null && simpleRole.startsWith("ROLE_")) {
+			simpleRole = simpleRole.substring(5);
+		}
+		return new LoginResponseDto(token, user.getId().toString(), simpleRole);
 	}
 	
 	public SignupResponseDto signup(SignupRequestDto signupRequestDto) {
