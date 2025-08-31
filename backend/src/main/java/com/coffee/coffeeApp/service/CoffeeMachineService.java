@@ -56,11 +56,6 @@ public class CoffeeMachineService {
             throw new IllegalArgumentException("Facility not found: " + machineDto.getFacilityId());
         }
         
-        // Generate ID if not provided
-        if (machineDto.getId() == null || machineDto.getId().isEmpty()) {
-            machineDto.setId(UUID.randomUUID().toString());
-        }
-        
         CoffeeMachine machine = convertToEntity(machineDto);
         machine.setIsActive(true);
         
@@ -70,6 +65,11 @@ public class CoffeeMachineService {
         if (machine.getBeansLevel() == null) machine.setBeansLevel(100.0f);
         if (machine.getTemperature() == null) machine.setTemperature(0.0f);
         
+        // Ensure name is set (entity requires non-null)
+        if (machine.getName() == null || machine.getName().isBlank()) {
+            machine.setName("Coffee Machine");
+        }
+
         CoffeeMachine savedMachine = coffeeMachineRepository.save(machine);
         return convertToDtoWithStats(savedMachine);
     }
@@ -495,7 +495,12 @@ public class CoffeeMachineService {
     
     private CoffeeMachine convertToEntity(CoffeeMachineDto dto) {
         CoffeeMachine machine = new CoffeeMachine();
-        machine.setId(Integer.parseInt(dto.getId()));
+        // Set id only if provided and numeric; otherwise let DB auto-generate
+        if (dto.getId() != null) {
+            try {
+                machine.setId(Integer.parseInt(dto.getId()));
+            } catch (NumberFormatException ignored) {}
+        }
         machine.setFacilityId(Integer.parseInt(dto.getFacilityId()));
         machine.setStatus(dto.getStatus());
         machine.setTemperature(dto.getTemperature());
