@@ -9,6 +9,16 @@ const FacilityDetail = () => {
     const [machines, setMachines] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [createLoading, setCreateLoading] = useState(false);
+    const [createError, setCreateError] = useState('');
+    const [form, setForm] = useState({
+        status: 'ON',
+        temperature: 90,
+        waterLevel: 100,
+        milkLevel: 100,
+        beansLevel: 100
+    });
 
     useEffect(() => {
         const load = async () => {
@@ -30,6 +40,36 @@ const FacilityDetail = () => {
         };
         load();
     }, [id]);
+
+    const refreshMachines = async () => {
+        try {
+            const ms = await machinesAPI.getByFacility(id);
+            setMachines(ms || []);
+        } catch (e) {
+            console.error('Refresh machines failed', e);
+        }
+    };
+
+    const handleCreateMachine = async () => {
+        try {
+            setCreateLoading(true);
+            setCreateError('');
+            await machinesAPI.create({
+                facilityId: id,
+                status: form.status,
+                temperature: Number(form.temperature),
+                waterLevel: Number(form.waterLevel),
+                milkLevel: Number(form.milkLevel),
+                beansLevel: Number(form.beansLevel)
+            });
+            setShowAddModal(false);
+            await refreshMachines();
+        } catch (e) {
+            setCreateError(e?.message || 'Failed to create machine');
+        } finally {
+            setCreateLoading(false);
+        }
+    };
 
     if (loading) return <LoadingSpinner text="Loading facility..." />;
 
@@ -58,11 +98,11 @@ const FacilityDetail = () => {
             {/* Machines in this facility with Add Machine card */}
             <div className="machines-grid">
                 {/* Add Machine pseudo-card */}
-                <div className="machine-card add-card">
+                <div className="machine-card add-card" onClick={() => setShowAddModal(true)}>
                     <div className="add-content">
                         <i className="fas fa-plus-circle"></i>
                         <div>Add Machine</div>
-                        <small>Coming soon</small>
+                        <small>Create a new machine for this facility</small>
                     </div>
                 </div>
 
@@ -77,7 +117,58 @@ const FacilityDetail = () => {
                 .add-card { display:flex; align-items:center; justify-content:center; min-height: 200px; cursor: pointer; }
                 .add-content { text-align:center; color:#667eea; font-weight:700; }
                 .add-content i { font-size:2rem; margin-bottom:8px; }
+                .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display:flex; align-items:center; justify-content:center; z-index: 1000; }
+                .modal { background: white; border-radius: 12px; width: 520px; max-width: 92vw; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+                .modal-header { padding: 16px 20px; border-bottom: 1px solid #e9ecef; display:flex; align-items:center; justify-content:space-between; }
+                .modal-body { padding: 20px; }
+                .modal-footer { padding: 16px 20px; border-top: 1px solid #e9ecef; display:flex; justify-content:flex-end; gap: 12px; }
             `}</style>
+            {showAddModal && (
+                <div className="modal-backdrop" onClick={() => !createLoading && setShowAddModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h3 className="card-title"><i className="fas fa-plus-circle"></i> Add Machine</h3>
+                            <button className="btn btn-secondary" onClick={() => setShowAddModal(false)} disabled={createLoading}>Close</button>
+                        </div>
+                        <div className="modal-body">
+                            {createError && (
+                                <div className="alert alert-danger" style={{ marginBottom: 16 }}>
+                                    <i className="fas fa-exclamation-triangle"></i> {createError}
+                                </div>
+                            )}
+                            <div className="form-group">
+                                <label className="form-label">Status</label>
+                                <select className="form-select" value={form.status} onChange={(e)=>setForm(f=>({...f,status:e.target.value}))}>
+                                    <option value="ON">ON</option>
+                                    <option value="OFF">OFF</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Temperature (°C)</label>
+                                <input className="form-control" type="number" min="0" max="200" value={form.temperature} onChange={(e)=>setForm(f=>({...f,temperature:e.target.value}))} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Water Level (%)</label>
+                                <input className="form-control" type="number" min="0" max="100" value={form.waterLevel} onChange={(e)=>setForm(f=>({...f,waterLevel:e.target.value}))} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Milk Level (%)</label>
+                                <input className="form-control" type="number" min="0" max="100" value={form.milkLevel} onChange={(e)=>setForm(f=>({...f,milkLevel:e.target.value}))} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Beans Level (%)</label>
+                                <input className="form-control" type="number" min="0" max="100" value={form.beansLevel} onChange={(e)=>setForm(f=>({...f,beansLevel:e.target.value}))} />
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-secondary" onClick={() => setShowAddModal(false)} disabled={createLoading}>Cancel</button>
+                            <button className="btn btn-primary" onClick={handleCreateMachine} disabled={createLoading}>
+                                {createLoading ? 'Creating...' : 'Create Machine'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
