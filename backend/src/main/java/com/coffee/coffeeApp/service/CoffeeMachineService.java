@@ -477,6 +477,7 @@ public class CoffeeMachineService {
         dto.setStatus(machine.getStatus());
         dto.setTemperature(machine.getTemperature());
         dto.setWaterLevel(machine.getWaterLevel());
+        dto.setSugarLevel(machine.getSugarLevel());
         dto.setMilkLevel(machine.getMilkLevel());
         dto.setBeansLevel(machine.getBeansLevel());
         dto.setIsActive(machine.getIsActive());
@@ -500,6 +501,7 @@ public class CoffeeMachineService {
         machine.setStatus(dto.getStatus());
         machine.setTemperature(dto.getTemperature());
         machine.setWaterLevel(dto.getWaterLevel());
+        machine.setSugarLevel(dto.getSugarLevel());
         machine.setMilkLevel(dto.getMilkLevel());
         machine.setBeansLevel(dto.getBeansLevel());
         machine.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);

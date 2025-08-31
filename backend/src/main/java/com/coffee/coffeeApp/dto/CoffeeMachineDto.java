@@ -24,6 +24,10 @@ public class CoffeeMachineDto {
     @DecimalMax(value = "100.0", message = "Water level must be between 0 and 100")
     private Float waterLevel;
     
+    @DecimalMin(value = "0.0", message = "Sugar level must be between 0 and 100")
+    @DecimalMax(value = "100.0", message = "Sugar level must be between 0 and 100")
+    private Float sugarLevel;
+
     @DecimalMin(value = "0.0", message = "Milk level must be between 0 and 100")
     @DecimalMax(value = "100.0", message = "Milk level must be between 0 and 100")
     private Float milkLevel;
@@ -116,6 +120,14 @@ public class CoffeeMachineDto {
     
     public void setWaterLevel(Float waterLevel) {
         this.waterLevel = waterLevel;
+    }
+
+    public Float getSugarLevel() {
+        return sugarLevel;
+    }
+
+    public void setSugarLevel(Float sugarLevel) {
+        this.sugarLevel = sugarLevel;
     }
     
     public Float getMilkLevel() {
