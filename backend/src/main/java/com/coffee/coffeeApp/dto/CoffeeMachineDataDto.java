@@ -2,6 +2,7 @@ package com.coffee.coffeeApp.dto;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
@@ -77,6 +78,12 @@ public class CoffeeMachineDataDto {
 	}
 	public void setTimeStamp(LocalDateTime timeStamp) {
 		this.timeStamp = timeStamp;
+	}
+	
+	// Handle both "timestamp" and "timeStamp" from JSON
+	@JsonProperty("timestamp")
+	public void setTimestamp(LocalDateTime timestamp) {
+		this.timeStamp = timestamp;
 	}
 	
 	public CoffeeMachineDataDto(Integer id, Integer machineId, String status, float temperature, float waterLevel, float milkLevel,

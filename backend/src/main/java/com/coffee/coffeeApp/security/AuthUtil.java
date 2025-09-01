@@ -29,7 +29,7 @@ public class AuthUtil {
 				.subject(user.getUsername())
 				.claim("role", user.getRole().toString())
 				.issuedAt(new Date())
-				.expiration(new Date(System.currentTimeMillis() + 1000*60*15))  //token expires after 15 mins
+				.expiration(new Date(System.currentTimeMillis() + 1000*60*60*24))  //token expires after 24 hours
 				.signWith(getSecretKey())
 				.compact();
 	}
