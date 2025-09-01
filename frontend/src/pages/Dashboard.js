@@ -1,77 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useData } from '../context/DataContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Dashboard = () => {
     const { user, isAdmin, isFacility, getUserFacilityId } = useAuth();
-    const [dashboardData, setDashboardData] = useState({
-        totalMachines: 3,
-        activeMachines: 2,
-        totalFacilities: 1,
-        activeAlerts: 0,
-        todayUsage: 15,
-        recentAlerts: [],
-        lowSupplyMachines: [],
-        machineStatuses: [
-            {
-                id: 1,
-                name: "Coffee Machine 1",
-                status: "ON",
-                facilityId: 1,
-                facilityName: "Main Coffee Shop",
-                temperature: 95,
-                waterLevel: 85,
-                milkLevel: 70,
-                beansLevel: 90,
-                sugarLevel: 80
-            },
-            {
-                id: 2,
-                name: "Coffee Machine 2",
-                status: "ON",
-                facilityId: 1,
-                facilityName: "Main Coffee Shop",
-                temperature: 92,
-                waterLevel: 60,
-                milkLevel: 45,
-                beansLevel: 75,
-                sugarLevel: 65
-            },
-            {
-                id: 3,
-                name: "Coffee Machine 3",
-                status: "OFF",
-                facilityId: 1,
-                facilityName: "Main Coffee Shop",
-                temperature: 0,
-                waterLevel: 100,
-                milkLevel: 100,
-                beansLevel: 100,
-                sugarLevel: 100
-            }
-        ]
-    });
+    const { 
+        machines, 
+        facilities, 
+        loading, 
+        error, 
+        getDashboardStats, 
+        getLowSupplyMachines,
+        updateMachineStatus 
+    } = useData();
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+    const [localError, setLocalError] = useState(null);
 
-    // Role-based polling intervals
-    const refreshInterval = isAdmin() ? 60000 : 30000; // 60s for admin, 30s for facility
-    
-    useEffect(() => {
-        // Simulate data refresh based on role
-        const interval = setInterval(() => {
-            // Update some data to simulate real-time updates
-            setDashboardData(prev => ({
-                ...prev,
-                activeMachines: Math.floor(Math.random() * 3) + 1,
-                todayUsage: prev.todayUsage + Math.floor(Math.random() * 3)
-            }));
-        }, refreshInterval);
-
-        return () => clearInterval(interval);
-    }, [refreshInterval]);
+    // Get real-time dashboard statistics
+    const stats = getDashboardStats();
+    const lowSupplyMachines = getLowSupplyMachines();
 
     if (loading) {
         return <LoadingSpinner text="Loading dashboard..." />;
@@ -106,7 +55,7 @@ const Dashboard = () => {
                             <i className="fas fa-coffee"></i>
                         </div>
                         <div className="card-content">
-                            <h3>{dashboardData.totalMachines}</h3>
+                            <h3>{stats.totalMachines}</h3>
                             <p>Total Machines</p>
                         </div>
                     </div>
@@ -117,7 +66,7 @@ const Dashboard = () => {
                             <i className="fas fa-power-off"></i>
                         </div>
                         <div className="card-content">
-                            <h3>{dashboardData.activeMachines}</h3>
+                            <h3>{stats.activeMachines}</h3>
                             <p>Active Machines</p>
                         </div>
                     </div>
@@ -129,7 +78,7 @@ const Dashboard = () => {
                                 <i className="fas fa-building"></i>
                             </div>
                             <div className="card-content">
-                                <h3>{dashboardData.totalFacilities}</h3>
+                                <h3>{stats.totalFacilities}</h3>
                                 <p>Total Facilities</p>
                             </div>
                         </div>
@@ -141,8 +90,8 @@ const Dashboard = () => {
                             <i className="fas fa-exclamation-triangle"></i>
                         </div>
                         <div className="card-content">
-                            <h3>{dashboardData.activeAlerts}</h3>
-                            <p>Active Alerts</p>
+                            <h3>{stats.lowSupplyMachines}</h3>
+                            <p>Low Supply Alerts</p>
                         </div>
                     </div>
                 </div>
@@ -160,7 +109,7 @@ const Dashboard = () => {
                         </div>
                         <div className="card-body">
                             <div className="machine-grid">
-                                {dashboardData.machineStatuses.map((machine) => (
+                                {machines.map((machine) => (
                                     <div key={machine.id} className="machine-card">
                                         <div className="machine-header">
                                             <h4>{machine.name}</h4>

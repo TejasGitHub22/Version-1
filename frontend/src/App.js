@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { DataProvider } from './context/DataContext';
 
 // Components
 import Navbar from './components/Navbar';
@@ -77,11 +78,13 @@ const AppRoutes = () => {
 const App = () => {
     return (
         <AuthProvider>
-            <Router>
-                <AppLayout>
-                    <AppRoutes />
-                </AppLayout>
-            </Router>
+            <DataProvider>
+                <Router>
+                    <AppLayout>
+                        <AppRoutes />
+                    </AppLayout>
+                </Router>
+            </DataProvider>
         </AuthProvider>
     );
 };

@@ -1,50 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { machinesAPI } from '../services/api';
-import { usePolling } from '../hooks/useApi';
+import { useData } from '../context/DataContext';
 import { formatDateTime, getLevelColor, getStatusBadge, formatTemperature } from '../utils/helpers';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Machines = () => {
     const [searchParams, setSearchParams] = useSearchParams();
-    const [machines, setMachines] = useState([]);
+    const { 
+        machines, 
+        loading, 
+        error, 
+        updateMachineStatus,
+        getUsageCountForMachine 
+    } = useData();
+    
     const [filteredMachines, setFilteredMachines] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [filters, setFilters] = useState({
         status: searchParams.get('status') || 'all',
         facility: searchParams.get('facility') || 'all',
         search: searchParams.get('search') || ''
     });
 
-    // Poll machines data every 5 seconds
-    const { data: machinesData } = usePolling(machinesAPI.getAll, 5000);
-
     useEffect(() => {
-        fetchMachines();
-    }, []);
+        applyFilters(machines);
+    }, [machines, filters]);
 
-    useEffect(() => {
-        if (machinesData) {
-            setMachines(machinesData);
-            applyFilters(machinesData);
-        }
-    }, [machinesData, filters]);
 
-    const fetchMachines = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const data = await machinesAPI.getAll();
-            setMachines(data || []);
-            applyFilters(data || []);
-        } catch (err) {
-            setError('Failed to load machines');
-            console.error('Machines error:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const applyFilters = (machinesList) => {
         let filtered = [...machinesList];
@@ -86,11 +67,8 @@ const Machines = () => {
     };
 
     const handleStatusUpdate = async (machineId, newStatus) => {
-        try {
-            await machinesAPI.updateStatus(machineId, newStatus);
-            // Refresh data
-            fetchMachines();
-        } catch (err) {
+        const success = await updateMachineStatus(machineId, newStatus);
+        if (!success) {
             alert('Failed to update machine status');
         }
     };

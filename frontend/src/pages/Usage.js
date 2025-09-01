@@ -1,18 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import { useData } from '../context/DataContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Usage = () => {
+    const { 
+        usageHistory, 
+        machines, 
+        loading, 
+        error, 
+        getTotalUsageCount, 
+        getTodayUsageCount,
+        getUsageCountForMachine 
+    } = useData();
+    
     const [analyticsData, setAnalyticsData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [simulatorError, setSimulatorError] = useState(null);
 
     useEffect(() => {
-        fetchAnalyticsData();
+        fetchSimulatorAnalytics();
     }, []);
 
-    const fetchAnalyticsData = async () => {
+    const fetchSimulatorAnalytics = async () => {
         try {
-            setLoading(true);
             const [brewTypes, resourceAverages, recentActivity] = await Promise.all([
                 fetch('http://localhost:8081/api/analytics/usage/brew-types').then(res => res.json()),
                 fetch('http://localhost:8081/api/analytics/resources/averages').then(res => res.json()),
@@ -24,11 +33,10 @@ const Usage = () => {
                 resourceAverages,
                 recentActivity
             });
+            setSimulatorError(null);
         } catch (err) {
-            setError('Failed to fetch analytics data. Make sure the simulator is running on port 8081.');
-            console.error('Error fetching analytics:', err);
-        } finally {
-            setLoading(false);
+            setSimulatorError('Simulator analytics not available. Make sure the simulator is running on port 8081.');
+            console.error('Error fetching simulator analytics:', err);
         }
     };
 
@@ -87,6 +95,55 @@ const Usage = () => {
                 </div>
             </div>
 
+            {/* Real Usage Statistics */}
+            <div className="row">
+                <div className="col-md-4">
+                    <div className="card">
+                        <div className="card-header">
+                            <h3 className="card-title">
+                                <i className="fas fa-chart-line"></i> Total Usage
+                            </h3>
+                        </div>
+                        <div className="card-body">
+                            <div className="usage-stat">
+                                <h2>{getTotalUsageCount()}</h2>
+                                <p>Total Cups Brewed</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-4">
+                    <div className="card">
+                        <div className="card-header">
+                            <h3 className="card-title">
+                                <i className="fas fa-calendar-day"></i> Today's Usage
+                            </h3>
+                        </div>
+                        <div className="card-body">
+                            <div className="usage-stat">
+                                <h2>{getTodayUsageCount()}</h2>
+                                <p>Cups Brewed Today</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-4">
+                    <div className="card">
+                        <div className="card-header">
+                            <h3 className="card-title">
+                                <i className="fas fa-coffee"></i> Active Machines
+                            </h3>
+                        </div>
+                        <div className="card-body">
+                            <div className="usage-stat">
+                                <h2>{machines.filter(m => m.status === 'ON').length}</h2>
+                                <p>Machines Currently ON</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {/* Brew Type Usage */}
             <div className="row">
                 <div className="col-12">
@@ -97,23 +154,30 @@ const Usage = () => {
                             </h3>
                         </div>
                         <div className="card-body">
-                            {Object.entries(analyticsData.brewTypes).map(([brewType, count]) => (
-                                <div key={brewType} className="brew-type-item">
-                                    <div className="brew-type-info">
-                                        <span className="brew-type-name">{brewType}</span>
-                                        <span className="brew-type-count">{count} brews</span>
+                            {analyticsData && analyticsData.brewTypes ? (
+                                Object.entries(analyticsData.brewTypes).map(([brewType, count]) => (
+                                    <div key={brewType} className="brew-type-item">
+                                        <div className="brew-type-info">
+                                            <span className="brew-type-name">{brewType}</span>
+                                            <span className="brew-type-count">{count} brews</span>
+                                        </div>
+                                        <div className="brew-type-bar">
+                                            <div 
+                                                className="brew-type-progress" 
+                                                style={{ 
+                                                    width: `${(count / Math.max(...Object.values(analyticsData.brewTypes))) * 100}%`,
+                                                    backgroundColor: getRandomColor(brewType)
+                                                }}
+                                            ></div>
+                                        </div>
                                     </div>
-                                    <div className="brew-type-bar">
-                                        <div 
-                                            className="brew-type-progress" 
-                                            style={{ 
-                                                width: `${(count / Math.max(...Object.values(analyticsData.brewTypes))) * 100}%`,
-                                                backgroundColor: getRandomColor(brewType)
-                                            }}
-                                        ></div>
-                                    </div>
+                                ))
+                            ) : (
+                                <div className="alert alert-info">
+                                    <i className="fas fa-info-circle"></i>
+                                    {simulatorError || 'Loading brew type data...'}
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </div>
                 </div>
@@ -478,6 +542,30 @@ const Usage = () => {
                     background: #f8d7da;
                     color: #721c24;
                     border: 1px solid #f5c6cb;
+                }
+
+                .alert-info {
+                    background: #d1ecf1;
+                    color: #0c5460;
+                    border: 1px solid #bee5eb;
+                }
+
+                .usage-stat {
+                    text-align: center;
+                    padding: 20px;
+                }
+
+                .usage-stat h2 {
+                    font-size: 3rem;
+                    font-weight: 700;
+                    color: #007bff;
+                    margin-bottom: 10px;
+                }
+
+                .usage-stat p {
+                    color: #6c757d;
+                    font-size: 1.1rem;
+                    margin: 0;
                 }
             `}</style>
         </div>
