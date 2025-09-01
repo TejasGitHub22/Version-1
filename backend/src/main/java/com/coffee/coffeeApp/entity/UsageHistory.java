@@ -46,9 +46,9 @@ public class UsageHistory {
     @JoinColumn(name = "machineId", referencedColumnName = "id", insertable = false, updatable = false)
     private CoffeeMachine coffeeMachine;
     
-    // Many-to-One relationship with User
+    // Many-to-One relationship with User (avoid reserved keyword 'user')
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user", referencedColumnName = "id", insertable = false, updatable = false)
+    @JoinColumn(name = "user_id", referencedColumnName = "id", insertable = false, updatable = false)
     private User userEntity;
     
     // Constructors
