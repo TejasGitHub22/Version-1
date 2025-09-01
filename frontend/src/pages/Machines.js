@@ -244,6 +244,20 @@ const Machines = () => {
 
                                 <div className="level-row">
                                     <span className="level-label">
+                                        <i className="fas fa-cube"></i>
+                                        Sugar
+                                    </span>
+                                    <div className="level-bar">
+                                        <div 
+                                            className={`level-fill ${getLevelColor(machine.sugarLevel)}`}
+                                            style={{ width: `${machine.sugarLevel || 0}%` }}
+                                        ></div>
+                                    </div>
+                                    <span className="level-value">{Math.round(machine.sugarLevel || 0)}%</span>
+                                </div>
+
+                                <div className="level-row">
+                                    <span className="level-label">
                                         <i className="fas fa-seedling"></i>
                                         Beans
                                     </span>

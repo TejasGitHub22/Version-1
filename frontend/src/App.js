@@ -16,6 +16,7 @@ import Usage from './pages/Usage';
 import Users from './pages/Users';
 import MachineDetail from './pages/MachineDetail';
 import FacilityDetail from './pages/FacilityDetail';
+import SelectLocation from './pages/SelectLocation';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -52,12 +53,13 @@ const AppRoutes = () => {
             <Route 
                 path="/login" 
                 element={
-                    isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+                    isAuthenticated ? <Navigate to="/select-location" replace /> : <Login />
                 } 
             />
 
             {/* Protected Routes */}
             <Route path="/" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
+            <Route path="/select-location" element={<ProtectedRoute><SelectLocation /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/facilities" element={<ProtectedRoute><Facilities /></ProtectedRoute>} />
             <Route path="/facilities/:id" element={<ProtectedRoute><FacilityDetail /></ProtectedRoute>} />

@@ -6,10 +6,12 @@ import lombok.Data;
 public class LoginResponseDto {
 	String jwt;
 	String userId;
+	String role;
 	
-	public LoginResponseDto(String jwt, String userId) {
+	public LoginResponseDto(String jwt, String userId, String role) {
 		this.jwt = jwt;
 		this.userId = userId;
+		this.role = role;
 	}
 	
 	public String getJwt() {
@@ -23,5 +25,11 @@ public class LoginResponseDto {
 	}
 	public void setUserId(String userId) {
 		this.userId = userId;
+	}
+	public String getRole() {
+		return role;
+	}
+	public void setRole(String role) {
+		this.role = role;
 	}
 }

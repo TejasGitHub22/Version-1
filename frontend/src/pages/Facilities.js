@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { facilitiesAPI } from '../services/api';
 import { usePolling } from '../hooks/useApi';
 import { formatDateTime } from '../utils/helpers';
@@ -7,11 +7,18 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 const Facilities = () => {
     const [facilities, setFacilities] = useState([]);
+    const [searchParams] = useSearchParams();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     // Poll facilities data every 30 seconds
-    const { data: facilitiesData } = usePolling(facilitiesAPI.getAll, 30000);
+    const city = searchParams.get('city');
+    const { data: facilitiesData } = usePolling(async () => {
+        if (city) {
+            return await facilitiesAPI.getByLocation(city);
+        }
+        return await facilitiesAPI.getAll();
+    }, 30000, [city]);
 
     useEffect(() => {
         fetchFacilities();
@@ -27,7 +34,12 @@ const Facilities = () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await facilitiesAPI.getAll();
+            let data;
+            if (city) {
+                data = await facilitiesAPI.getByLocation(city);
+            } else {
+                data = await facilitiesAPI.getAll();
+            }
             setFacilities(data || []);
         } catch (err) {
             setError('Failed to load facilities');
@@ -61,9 +73,9 @@ const Facilities = () => {
                 <div className="page-title">
                     <h1>
                         <i className="fas fa-building"></i>
-                        Facilities
+                        {city ? `${city} Offices` : 'Facilities'}
                     </h1>
-                    <p>Manage all facility locations and their coffee machines</p>
+                    <p>{city ? `Select an office in ${city}` : 'Manage all facility locations and their coffee machines'}</p>
                 </div>
                 <div className="page-actions">
                     <button 
