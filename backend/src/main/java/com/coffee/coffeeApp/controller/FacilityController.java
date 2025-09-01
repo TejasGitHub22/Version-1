@@ -33,7 +33,6 @@ public class FacilityController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<FacilityDto>> getAllFacilities() {
         List<FacilityDto> facilities = facilityService.getAllFacilities();
