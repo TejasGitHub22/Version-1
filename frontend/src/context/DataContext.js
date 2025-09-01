@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { machinesAPI, facilitiesAPI, usageHistoryAPI } from '../services/api';
+import { machinesAPI, facilitiesAPI, usageAPI } from '../services/api';
 
 const DataContext = createContext();
 
@@ -28,7 +28,7 @@ export const DataProvider = ({ children }) => {
             const [machinesData, facilitiesData, usageData] = await Promise.allSettled([
                 machinesAPI.getAll(),
                 facilitiesAPI.getAll(),
-                usageHistoryAPI.getAll()
+                usageAPI.getAll()
             ]);
 
             // Handle each result separately to prevent one failure from breaking everything

@@ -33,7 +33,6 @@ public class CoffeeMachineController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<CoffeeMachineDto>> getAllMachines() {
         List<CoffeeMachineDto> machines = coffeeMachineService.getAllMachines();

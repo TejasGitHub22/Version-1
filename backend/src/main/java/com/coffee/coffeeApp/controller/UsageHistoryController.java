@@ -34,7 +34,6 @@ public class UsageHistoryController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
     public ResponseEntity<List<UsageHistoryDto>> getAllUsage() {
         List<UsageHistoryDto> usage = usageHistoryService.getAllUsage();
