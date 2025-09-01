@@ -86,11 +86,11 @@ public class MachineSimulatorService {
                             machineId,
                             (Integer) messageMap.get("facilityId"),
                             (String) messageMap.get("status"),
-                            (Double) messageMap.get("temperature"),
-                            (Double) messageMap.get("waterLevel"),
-                            (Double) messageMap.get("milkLevel"),
-                            (Double) messageMap.get("beansLevel"),
-                            (Double) messageMap.get("sugarLevel"),
+                            ((Number) messageMap.get("temperature")).doubleValue(),
+                            ((Number) messageMap.get("waterLevel")).doubleValue(),
+                            ((Number) messageMap.get("milkLevel")).doubleValue(),
+                            ((Number) messageMap.get("beansLevel")).doubleValue(),
+                            ((Number) messageMap.get("sugarLevel")).doubleValue(),
                             (String) messageMap.get("brewType"));
 
                     machineDataRepository.save(machineData);
