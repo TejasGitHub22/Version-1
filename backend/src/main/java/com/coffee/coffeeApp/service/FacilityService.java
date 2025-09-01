@@ -280,7 +280,9 @@ public class FacilityService {
     
     private Facility convertToEntity(FacilityDto dto) {
         Facility facility = new Facility();
-        facility.setId(Integer.parseInt(dto.getId()));
+        if (dto.getId() != null && !dto.getId().isEmpty()) {
+            facility.setId(Integer.parseInt(dto.getId()));
+        }
         facility.setName(dto.getName());
         facility.setLocation(dto.getLocation());
         facility.setIsActive(dto.getIsActive() != null ? dto.getIsActive() : true);

@@ -38,11 +38,13 @@ public interface UsageHistoryRepository extends JpaRepository<UsageHistory, Inte
                                                     @Param("endDate") LocalDateTime endDate);
     
     // Find today's usage
-    @Query("SELECT uh FROM UsageHistory uh WHERE DATE(uh.timestamp) = CURRENT_DATE AND uh.isActive = true ORDER BY uh.timestamp DESC")
+    @Query("SELECT uh FROM UsageHistory uh WHERE uh.timestamp >= CURRENT_DATE " +
+           "AND uh.timestamp < CURRENT_DATE + 1 DAY AND uh.isActive = true ORDER BY uh.timestamp DESC")
     List<UsageHistory> findTodayUsage();
     
     // Find today's usage by machine
-    @Query("SELECT uh FROM UsageHistory uh WHERE uh.machineId = :machineId AND DATE(uh.timestamp) = CURRENT_DATE " +
+    @Query("SELECT uh FROM UsageHistory uh WHERE uh.machineId = :machineId " +
+           "AND uh.timestamp >= CURRENT_DATE AND uh.timestamp < CURRENT_DATE + 1 DAY " +
            "AND uh.isActive = true ORDER BY uh.timestamp DESC")
     List<UsageHistory> findTodayUsageByMachine(@Param("machineId") Integer machineId);
     
@@ -55,13 +57,14 @@ public interface UsageHistoryRepository extends JpaRepository<UsageHistory, Inte
     List<Object[]> countUsageByMachine();
     
     // Get hourly usage statistics
-    @Query("SELECT HOUR(uh.timestamp) as hour, COUNT(uh) FROM UsageHistory uh " +
-           "WHERE DATE(uh.timestamp) = CURRENT_DATE AND uh.isActive = true GROUP BY HOUR(uh.timestamp) ORDER BY hour")
+    @Query("SELECT EXTRACT(HOUR FROM uh.timestamp) as hour, COUNT(uh) FROM UsageHistory uh " +
+           "WHERE uh.timestamp >= CURRENT_DATE AND uh.timestamp < CURRENT_DATE + 1 DAY " +
+           "AND uh.isActive = true GROUP BY EXTRACT(HOUR FROM uh.timestamp) ORDER BY hour")
     List<Object[]> getHourlyUsageStatistics();
     
     // Get daily usage statistics for last 30 days
-    @Query("SELECT DATE(uh.timestamp) as date, COUNT(uh) FROM UsageHistory uh " +
-           "WHERE uh.timestamp >= :thirtyDaysAgo AND uh.isActive = true GROUP BY DATE(uh.timestamp) ORDER BY date")
+    @Query("SELECT CAST(uh.timestamp AS DATE) as date, COUNT(uh) FROM UsageHistory uh " +
+           "WHERE uh.timestamp >= :thirtyDaysAgo AND uh.isActive = true GROUP BY CAST(uh.timestamp AS DATE) ORDER BY date")
     List<Object[]> getDailyUsageStatistics(@Param("thirtyDaysAgo") LocalDateTime thirtyDaysAgo);
     
     // Get usage statistics by facility (through machine)

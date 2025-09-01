@@ -42,12 +42,12 @@ LOGIN_RESPONSE=$(curl -s -X POST http://localhost:8080/api/auth/login \
     "password": "password123"
   }')
 
-if ! echo "$LOGIN_RESPONSE" | grep -q "token"; then
+if ! echo "$LOGIN_RESPONSE" | grep -q "jwt"; then
     echo "❌ Login failed: $LOGIN_RESPONSE"
     exit 1
 fi
 
-TOKEN=$(echo "$LOGIN_RESPONSE" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+TOKEN=$(echo "$LOGIN_RESPONSE" | grep -o '"jwt":"[^"]*"' | cut -d'"' -f4)
 echo "✅ Login successful"
 
 # Create Facilities
@@ -61,15 +61,17 @@ PUNE_RESPONSE=$(curl -s -X POST http://localhost:8080/api/facilities \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
     "name": "Pune",
-    "address": "Pune, Maharashtra, India",
-    "contactPerson": "Pune Manager",
-    "contactEmail": "pune@coffee.com",
-    "contactPhone": "+91-20-12345678"
+    "location": "Pune, Maharashtra, India"
   }')
 
 if echo "$PUNE_RESPONSE" | grep -q "Pune"; then
-    PUNE_ID=$(echo "$PUNE_RESPONSE" | grep -o '"id":[0-9]*' | cut -d':' -f2)
+    PUNE_ID=$(echo "$PUNE_RESPONSE" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
     echo "   ✅ Pune facility created (ID: $PUNE_ID)"
+elif echo "$PUNE_RESPONSE" | grep -q "already exists"; then
+    echo "   ℹ️  Pune facility already exists, getting ID..."
+    PUNE_ID=$(curl -s -X GET http://localhost:8080/api/facilities \
+      -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*","name":"Pune"' | cut -d'"' -f4)
+    echo "   ✅ Pune facility found (ID: $PUNE_ID)"
 else
     echo "   ❌ Failed to create Pune facility: $PUNE_RESPONSE"
 fi
@@ -81,15 +83,17 @@ MUMBAI_RESPONSE=$(curl -s -X POST http://localhost:8080/api/facilities \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
     "name": "Mumbai",
-    "address": "Mumbai, Maharashtra, India",
-    "contactPerson": "Mumbai Manager",
-    "contactEmail": "mumbai@coffee.com",
-    "contactPhone": "+91-22-87654321"
+    "location": "Mumbai, Maharashtra, India"
   }')
 
 if echo "$MUMBAI_RESPONSE" | grep -q "Mumbai"; then
-    MUMBAI_ID=$(echo "$MUMBAI_RESPONSE" | grep -o '"id":[0-9]*' | cut -d':' -f2)
+    MUMBAI_ID=$(echo "$MUMBAI_RESPONSE" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
     echo "   ✅ Mumbai facility created (ID: $MUMBAI_ID)"
+elif echo "$MUMBAI_RESPONSE" | grep -q "already exists"; then
+    echo "   ℹ️  Mumbai facility already exists, getting ID..."
+    MUMBAI_ID=$(curl -s -X GET http://localhost:8080/api/facilities \
+      -H "Authorization: Bearer $TOKEN" | grep -o '"id":"[^"]*","name":"Mumbai"' | cut -d'"' -f4)
+    echo "   ✅ Mumbai facility found (ID: $MUMBAI_ID)"
 else
     echo "   ❌ Failed to create Mumbai facility: $MUMBAI_RESPONSE"
 fi
@@ -100,17 +104,16 @@ echo "5. Creating offices in Pune..."
 
 # Pune Office 1
 echo "   Creating Pune Office 1..."
-PUNE_OFFICE1_RESPONSE=$(curl -s -X POST http://localhost:8080/api/facilities/$PUNE_ID/offices \
+PUNE_OFFICE1_RESPONSE=$(curl -s -X POST http://localhost:8080/api/facilities \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
     "name": "Pune Office 1",
-    "floor": "Ground Floor",
-    "capacity": 50
+    "location": "Pune, Maharashtra, India - Ground Floor"
   }')
 
 if echo "$PUNE_OFFICE1_RESPONSE" | grep -q "Pune Office 1"; then
-    PUNE_OFFICE1_ID=$(echo "$PUNE_OFFICE1_RESPONSE" | grep -o '"id":[0-9]*' | cut -d':' -f2)
+    PUNE_OFFICE1_ID=$(echo "$PUNE_OFFICE1_RESPONSE" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
     echo "   ✅ Pune Office 1 created (ID: $PUNE_OFFICE1_ID)"
 else
     echo "   ❌ Failed to create Pune Office 1: $PUNE_OFFICE1_RESPONSE"
@@ -118,17 +121,16 @@ fi
 
 # Pune Office 2
 echo "   Creating Pune Office 2..."
-PUNE_OFFICE2_RESPONSE=$(curl -s -X POST http://localhost:8080/api/facilities/$PUNE_ID/offices \
+PUNE_OFFICE2_RESPONSE=$(curl -s -X POST http://localhost:8080/api/facilities \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
     "name": "Pune Office 2",
-    "floor": "First Floor",
-    "capacity": 75
+    "location": "Pune, Maharashtra, India - First Floor"
   }')
 
 if echo "$PUNE_OFFICE2_RESPONSE" | grep -q "Pune Office 2"; then
-    PUNE_OFFICE2_ID=$(echo "$PUNE_OFFICE2_RESPONSE" | grep -o '"id":[0-9]*' | cut -d':' -f2)
+    PUNE_OFFICE2_ID=$(echo "$PUNE_OFFICE2_RESPONSE" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
     echo "   ✅ Pune Office 2 created (ID: $PUNE_OFFICE2_ID)"
 else
     echo "   ❌ Failed to create Pune Office 2: $PUNE_OFFICE2_RESPONSE"
@@ -140,17 +142,16 @@ echo "6. Creating offices in Mumbai..."
 
 # Mumbai Office 1
 echo "   Creating Mumbai Office 1..."
-MUMBAI_OFFICE1_RESPONSE=$(curl -s -X POST http://localhost:8080/api/facilities/$MUMBAI_ID/offices \
+MUMBAI_OFFICE1_RESPONSE=$(curl -s -X POST http://localhost:8080/api/facilities \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
     "name": "Mumbai Office 1",
-    "floor": "Ground Floor",
-    "capacity": 100
+    "location": "Mumbai, Maharashtra, India - Ground Floor"
   }')
 
 if echo "$MUMBAI_OFFICE1_RESPONSE" | grep -q "Mumbai Office 1"; then
-    MUMBAI_OFFICE1_ID=$(echo "$MUMBAI_OFFICE1_RESPONSE" | grep -o '"id":[0-9]*' | cut -d':' -f2)
+    MUMBAI_OFFICE1_ID=$(echo "$MUMBAI_OFFICE1_RESPONSE" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
     echo "   ✅ Mumbai Office 1 created (ID: $MUMBAI_OFFICE1_ID)"
 else
     echo "   ❌ Failed to create Mumbai Office 1: $MUMBAI_OFFICE1_RESPONSE"
@@ -158,17 +159,16 @@ fi
 
 # Mumbai Office 2
 echo "   Creating Mumbai Office 2..."
-MUMBAI_OFFICE2_RESPONSE=$(curl -s -X POST http://localhost:8080/api/facilities/$MUMBAI_ID/offices \
+MUMBAI_OFFICE2_RESPONSE=$(curl -s -X POST http://localhost:8080/api/facilities \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{
     "name": "Mumbai Office 2",
-    "floor": "Second Floor",
-    "capacity": 80
+    "location": "Mumbai, Maharashtra, India - Second Floor"
   }')
 
 if echo "$MUMBAI_OFFICE2_RESPONSE" | grep -q "Mumbai Office 2"; then
-    MUMBAI_OFFICE2_ID=$(echo "$MUMBAI_OFFICE2_RESPONSE" | grep -o '"id":[0-9]*' | cut -d':' -f2)
+    MUMBAI_OFFICE2_ID=$(echo "$MUMBAI_OFFICE2_RESPONSE" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
     echo "   ✅ Mumbai Office 2 created (ID: $MUMBAI_OFFICE2_ID)"
 else
     echo "   ❌ Failed to create Mumbai Office 2: $MUMBAI_OFFICE2_RESPONSE"
@@ -191,11 +191,11 @@ create_machines_for_office() {
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer $TOKEN" \
       -d "{
-        \"name\": \"$facility_name $office_name Machine 1\",
+        \"name\": \"$office_name Machine 1\",
         \"model\": \"CoffeeMaster Pro\",
-        \"serialNumber\": \"CM-${facility_name:0:3}-${office_name:0:3}-001\",
+        \"serialNumber\": \"CM-001\",
         \"location\": \"$office_name\",
-        \"facilityId\": $facility_id,
+        \"facilityId\": $office_id,
         \"status\": \"ACTIVE\"
       }")
     
@@ -210,11 +210,11 @@ create_machines_for_office() {
       -H "Content-Type: application/json" \
       -H "Authorization: Bearer $TOKEN" \
       -d "{
-        \"name\": \"$facility_name $office_name Machine 2\",
+        \"name\": \"$office_name Machine 2\",
         \"model\": \"CoffeeMaster Elite\",
-        \"serialNumber\": \"CM-${facility_name:0:3}-${office_name:0:3}-002\",
+        \"serialNumber\": \"CM-002\",
         \"location\": \"$office_name\",
-        \"facilityId\": $facility_id,
+        \"facilityId\": $office_id,
         \"status\": \"ACTIVE\"
       }")
     
@@ -226,10 +226,10 @@ create_machines_for_office() {
 }
 
 # Create machines for each office
-create_machines_for_office $PUNE_ID "Pune Office 1" "Pune"
-create_machines_for_office $PUNE_ID "Pune Office 2" "Pune"
-create_machines_for_office $MUMBAI_ID "Mumbai Office 1" "Mumbai"
-create_machines_for_office $MUMBAI_ID "Mumbai Office 2" "Mumbai"
+create_machines_for_office $PUNE_OFFICE1_ID "Pune Office 1" "Pune"
+create_machines_for_office $PUNE_OFFICE2_ID "Pune Office 2" "Pune"
+create_machines_for_office $MUMBAI_OFFICE1_ID "Mumbai Office 1" "Mumbai"
+create_machines_for_office $MUMBAI_OFFICE2_ID "Mumbai Office 2" "Mumbai"
 
 # Summary
 echo ""

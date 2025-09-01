@@ -59,7 +59,8 @@ public interface AlertLogRepository extends JpaRepository<AlertLog, Integer> {
                                        @Param("endDate") LocalDateTime endDate);
     
     // Find today's alerts
-    @Query("SELECT al FROM AlertLog al WHERE DATE(al.timestamp) = CURRENT_DATE " +
+    @Query("SELECT al FROM AlertLog al WHERE al.timestamp >= CURRENT_DATE " +
+           "AND al.timestamp < CURRENT_DATE + 1 DAY " +
            "AND al.isActive = true ORDER BY al.timestamp DESC")
     List<AlertLog> findTodayAlerts();
     
