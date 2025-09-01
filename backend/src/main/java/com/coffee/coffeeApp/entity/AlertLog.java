@@ -17,7 +17,7 @@ public class AlertLog {
     @Column(name = "id")
     private Integer id;
     
-    @NotBlank(message = "Machine ID is required")
+    @NotNull(message = "Machine ID is required")
     @Column(name = "machineId", nullable = false)
     private Integer machineId;
     

@@ -20,7 +20,7 @@ public class CoffeeMachine {
     @Column(name = "id")
     private Integer id;
     
-    @NotBlank(message = "Facility ID is required")
+    @NotNull(message = "Facility ID is required")
     @Column(name = "facilityId", nullable = false)
     private Integer facilityId;
     
