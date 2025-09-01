@@ -1,5 +1,6 @@
 // API Configuration
 const API_BASE_URL = 'http://localhost:8080';
+const SIMULATOR_BASE_URL = 'http://localhost:8081';
 
 // Auth token management
 const getAuthToken = () => localStorage.getItem('authToken');
@@ -337,6 +338,25 @@ export const dashboardAPI = {
     }
 };
 
+// Simulator Analytics API (port 8081)
+export const simulatorAPI = {
+    getMachineData: async (machineId) => {
+        const res = await fetch(`${SIMULATOR_BASE_URL}/api/analytics/machines/${machineId}`);
+        if (!res.ok) throw new Error('Simulator fetch failed');
+        return await res.json();
+    },
+    getBrewTypeUsage: async () => {
+        const res = await fetch(`${SIMULATOR_BASE_URL}/api/analytics/usage/brew-types`);
+        if (!res.ok) throw new Error('Simulator fetch failed');
+        return await res.json();
+    },
+    getRecentActivity: async () => {
+        const res = await fetch(`${SIMULATOR_BASE_URL}/api/analytics/recent-activity`);
+        if (!res.ok) throw new Error('Simulator fetch failed');
+        return await res.json();
+    }
+};
+
 export default {
     authAPI,
     healthAPI,
@@ -345,5 +365,6 @@ export default {
     machinesAPI,
     alertsAPI,
     usageAPI,
-    dashboardAPI
+    dashboardAPI,
+    simulatorAPI
 };

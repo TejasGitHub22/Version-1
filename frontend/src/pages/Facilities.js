@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { facilitiesAPI } from '../services/api';
 import { usePolling } from '../hooks/useApi';
@@ -6,16 +7,24 @@ import { formatDateTime } from '../utils/helpers';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Facilities = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [facilities, setFacilities] = useState([]);
+    const [locationFilter, setLocationFilter] = useState(searchParams.get('location') || 'all');
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     // Poll facilities data every 30 seconds
-    const { data: facilitiesData } = usePolling(facilitiesAPI.getAll, 30000);
+    const fetcher = async () => {
+        if (locationFilter !== 'all') {
+            return await facilitiesAPI.getByLocation(locationFilter);
+        }
+        return await facilitiesAPI.getAll();
+    };
+    const { data: facilitiesData } = usePolling(fetcher, 30000);
 
     useEffect(() => {
         fetchFacilities();
-    }, []);
+    }, [locationFilter]);
 
     useEffect(() => {
         if (facilitiesData) {
@@ -27,7 +36,7 @@ const Facilities = () => {
         try {
             setLoading(true);
             setError(null);
-            const data = await facilitiesAPI.getAll();
+            const data = locationFilter !== 'all' ? await facilitiesAPI.getByLocation(locationFilter) : await facilitiesAPI.getAll();
             setFacilities(data || []);
         } catch (err) {
             setError('Failed to load facilities');
@@ -66,6 +75,24 @@ const Facilities = () => {
                     <p>Manage all facility locations and their coffee machines</p>
                 </div>
                 <div className="page-actions">
+                    <div className="form-group" style={{ marginRight: '12px' }}>
+                        <label className="form-label">Location</label>
+                        <select
+                            className="form-select"
+                            value={locationFilter}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                setLocationFilter(value);
+                                const params = new URLSearchParams(searchParams);
+                                if (value === 'all') { params.delete('location'); } else { params.set('location', value); }
+                                setSearchParams(params);
+                            }}
+                        >
+                            <option value="all">All</option>
+                            <option value="Pune">Pune</option>
+                            <option value="Mumbai">Mumbai</option>
+                        </select>
+                    </div>
                     <button 
                         onClick={fetchFacilities}
                         className="btn btn-outline-primary"

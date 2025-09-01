@@ -8,6 +8,7 @@ import LoadingSpinner from './components/LoadingSpinner';
 
 // Pages
 import Login from './pages/Login';
+import Locations from './pages/Locations';
 import Dashboard from './pages/Dashboard';
 import Facilities from './pages/Facilities';
 import Machines from './pages/Machines';
@@ -57,7 +58,8 @@ const AppRoutes = () => {
             />
 
             {/* Protected Routes */}
-            <Route path="/" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
+            <Route path="/" element={<ProtectedRoute><Navigate to="/locations" replace /></ProtectedRoute>} />
+            <Route path="/locations" element={<ProtectedRoute><Locations /></ProtectedRoute>} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/facilities" element={<ProtectedRoute><Facilities /></ProtectedRoute>} />
             <Route path="/facilities/:id" element={<ProtectedRoute><FacilityDetail /></ProtectedRoute>} />
@@ -68,7 +70,7 @@ const AppRoutes = () => {
             <Route path="/users" element={<ProtectedRoute><Users /></ProtectedRoute>} />
 
             {/* Catch all route */}
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            <Route path="*" element={<Navigate to="/locations" replace />} />
         </Routes>
     );
 };
