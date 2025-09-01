@@ -13,16 +13,14 @@ const Usage = () => {
     const fetchAnalyticsData = async () => {
         try {
             setLoading(true);
-            const [brewTypes, statusDistribution, resourceAverages, recentActivity] = await Promise.all([
+            const [brewTypes, resourceAverages, recentActivity] = await Promise.all([
                 fetch('http://localhost:8081/api/analytics/usage/brew-types').then(res => res.json()),
-                fetch('http://localhost:8081/api/analytics/status/distribution').then(res => res.json()),
                 fetch('http://localhost:8081/api/analytics/resources/averages').then(res => res.json()),
                 fetch('http://localhost:8081/api/analytics/recent-activity').then(res => res.json())
             ]);
 
             setAnalyticsData({
                 brewTypes,
-                statusDistribution,
                 resourceAverages,
                 recentActivity
             });
@@ -91,7 +89,7 @@ const Usage = () => {
 
             {/* Brew Type Usage */}
             <div className="row">
-                <div className="col-md-6">
+                <div className="col-12">
                     <div className="card">
                         <div className="card-header">
                             <h3 className="card-title">
@@ -120,27 +118,7 @@ const Usage = () => {
                     </div>
                 </div>
 
-                {/* Machine Status Distribution */}
-                <div className="col-md-6">
-                    <div className="card">
-                        <div className="card-header">
-                            <h3 className="card-title">
-                                <i className="fas fa-power-off"></i> Machine Status Distribution
-                            </h3>
-                        </div>
-                        <div className="card-body">
-                            {Object.entries(analyticsData.statusDistribution).map(([status, count]) => (
-                                <div key={status} className="status-item">
-                                    <div className="status-info">
-                                        <span className="status-name">{status}</span>
-                                        <span className="status-count">{count} records</span>
-                                    </div>
-                                    <div className="status-indicator" style={{ backgroundColor: getStatusColor(status) }}></div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+
             </div>
 
             {/* Resource Levels */}
