@@ -1,41 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { facilitiesAPI } from '../services/api';
-import { usePolling } from '../hooks/useApi';
+import { useData } from '../context/DataContext';
 import { formatDateTime } from '../utils/helpers';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Facilities = () => {
-    const [facilities, setFacilities] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-
-    // Poll facilities data every 30 seconds
-    const { data: facilitiesData } = usePolling(facilitiesAPI.getAll, 30000);
-
-    useEffect(() => {
-        fetchFacilities();
-    }, []);
-
-    useEffect(() => {
-        if (facilitiesData) {
-            setFacilities(facilitiesData);
-        }
-    }, [facilitiesData]);
-
-    const fetchFacilities = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const data = await facilitiesAPI.getAll();
-            setFacilities(data || []);
-        } catch (err) {
-            setError('Failed to load facilities');
-            console.error('Facilities error:', err);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const { 
+        facilities, 
+        loading, 
+        error, 
+        getMachinesByFacility 
+    } = useData();
 
     if (loading) {
         return <LoadingSpinner text="Loading facilities..." />;

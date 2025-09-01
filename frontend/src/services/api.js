@@ -322,6 +322,29 @@ export const usageAPI = {
     }
 };
 
+// Usage History API
+export const usageHistoryAPI = {
+    getAll: async () => {
+        return await apiRequest('/api/usage-history');
+    },
+
+    getByMachine: async (machineId) => {
+        return await apiRequest(`/api/usage-history/machine/${machineId}`);
+    },
+
+    getByUser: async (userId) => {
+        return await apiRequest(`/api/usage-history/user/${userId}`);
+    },
+
+    getToday: async () => {
+        return await apiRequest('/api/usage-history/today');
+    },
+
+    getStatistics: async () => {
+        return await apiRequest('/api/usage-history/statistics');
+    }
+};
+
 // Dashboard API (if implemented)
 export const dashboardAPI = {
     getSummary: async () => {
@@ -345,5 +368,6 @@ export default {
     machinesAPI,
     alertsAPI,
     usageAPI,
+    usageHistoryAPI,
     dashboardAPI
 };

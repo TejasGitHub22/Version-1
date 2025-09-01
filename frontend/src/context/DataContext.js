@@ -25,16 +25,22 @@ export const DataProvider = ({ children }) => {
             setLoading(true);
             setError(null);
             
-            const [machinesData, facilitiesData, usageData] = await Promise.all([
+            const [machinesData, facilitiesData, usageData] = await Promise.allSettled([
                 machinesAPI.getAll(),
                 facilitiesAPI.getAll(),
                 usageHistoryAPI.getAll()
             ]);
 
-            setMachines(machinesData || []);
-            setFacilities(facilitiesData || []);
-            setUsageHistory(usageData || []);
+            // Handle each result separately to prevent one failure from breaking everything
+            setMachines(machinesData.status === 'fulfilled' ? (machinesData.value || []) : []);
+            setFacilities(facilitiesData.status === 'fulfilled' ? (facilitiesData.value || []) : []);
+            setUsageHistory(usageData.status === 'fulfilled' ? (usageData.value || []) : []);
             setLastUpdate(new Date());
+            
+            // Set error only if all requests failed
+            if (machinesData.status === 'rejected' && facilitiesData.status === 'rejected' && usageData.status === 'rejected') {
+                setError('Failed to fetch data from all sources');
+            }
             
         } catch (err) {
             setError('Failed to fetch data');

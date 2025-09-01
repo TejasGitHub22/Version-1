@@ -195,102 +195,109 @@ const Usage = () => {
                             </h3>
                         </div>
                         <div className="card-body">
-                            <div className="resource-grid">
-                                <div className="resource-item">
-                                    <div className="resource-icon">
-                                        <i className="fas fa-tint"></i>
+                            {analyticsData && analyticsData.resourceAverages ? (
+                                <div className="resource-grid">
+                                    <div className="resource-item">
+                                        <div className="resource-icon">
+                                            <i className="fas fa-tint"></i>
+                                        </div>
+                                        <div className="resource-info">
+                                            <span className="resource-name">Water Level</span>
+                                            <span className="resource-value">{formatPercentage(analyticsData.resourceAverages.waterLevel)}%</span>
+                                        </div>
+                                        <div className="resource-bar">
+                                            <div 
+                                                className="resource-progress" 
+                                                style={{ 
+                                                    width: `${analyticsData.resourceAverages.waterLevel}%`,
+                                                    backgroundColor: getResourceColor(analyticsData.resourceAverages.waterLevel)
+                                                }}
+                                            ></div>
+                                        </div>
                                     </div>
-                                    <div className="resource-info">
-                                        <span className="resource-name">Water Level</span>
-                                        <span className="resource-value">{formatPercentage(analyticsData.resourceAverages.waterLevel)}%</span>
-                                    </div>
-                                    <div className="resource-bar">
-                                        <div 
-                                            className="resource-progress" 
-                                            style={{ 
-                                                width: `${analyticsData.resourceAverages.waterLevel}%`,
-                                                backgroundColor: getResourceColor(analyticsData.resourceAverages.waterLevel)
-                                            }}
-                                        ></div>
-                                    </div>
-                                </div>
 
-                                <div className="resource-item">
-                                    <div className="resource-icon">
-                                        <i className="fas fa-milk"></i>
+                                    <div className="resource-item">
+                                        <div className="resource-icon">
+                                            <i className="fas fa-milk"></i>
+                                        </div>
+                                        <div className="resource-info">
+                                            <span className="resource-name">Milk Level</span>
+                                            <span className="resource-value">{formatPercentage(analyticsData.resourceAverages.milkLevel)}%</span>
+                                        </div>
+                                        <div className="resource-bar">
+                                            <div 
+                                                className="resource-progress" 
+                                                style={{ 
+                                                    width: `${analyticsData.resourceAverages.milkLevel}%`,
+                                                    backgroundColor: getResourceColor(analyticsData.resourceAverages.milkLevel)
+                                                }}
+                                            ></div>
+                                        </div>
                                     </div>
-                                    <div className="resource-info">
-                                        <span className="resource-name">Milk Level</span>
-                                        <span className="resource-value">{formatPercentage(analyticsData.resourceAverages.milkLevel)}%</span>
-                                    </div>
-                                    <div className="resource-bar">
-                                        <div 
-                                            className="resource-progress" 
-                                            style={{ 
-                                                width: `${analyticsData.resourceAverages.milkLevel}%`,
-                                                backgroundColor: getResourceColor(analyticsData.resourceAverages.milkLevel)
-                                            }}
-                                        ></div>
-                                    </div>
-                                </div>
 
-                                <div className="resource-item">
-                                    <div className="resource-icon">
-                                        <i className="fas fa-seedling"></i>
+                                    <div className="resource-item">
+                                        <div className="resource-icon">
+                                            <i className="fas fa-seedling"></i>
+                                        </div>
+                                        <div className="resource-info">
+                                            <span className="resource-name">Beans Level</span>
+                                            <span className="resource-value">{formatPercentage(analyticsData.resourceAverages.beansLevel)}%</span>
+                                        </div>
+                                        <div className="resource-bar">
+                                            <div 
+                                                className="resource-progress" 
+                                                style={{ 
+                                                    width: `${analyticsData.resourceAverages.beansLevel}%`,
+                                                    backgroundColor: getResourceColor(analyticsData.resourceAverages.beansLevel)
+                                                }}
+                                            ></div>
+                                        </div>
                                     </div>
-                                    <div className="resource-info">
-                                        <span className="resource-name">Beans Level</span>
-                                        <span className="resource-value">{formatPercentage(analyticsData.resourceAverages.beansLevel)}%</span>
-                                    </div>
-                                    <div className="resource-bar">
-                                        <div 
-                                            className="resource-progress" 
-                                            style={{ 
-                                                width: `${analyticsData.resourceAverages.beansLevel}%`,
-                                                backgroundColor: getResourceColor(analyticsData.resourceAverages.beansLevel)
-                                            }}
-                                        ></div>
-                                    </div>
-                                </div>
 
-                                <div className="resource-item">
-                                    <div className="resource-icon">
-                                        <i className="fas fa-cube"></i>
+                                    <div className="resource-item">
+                                        <div className="resource-icon">
+                                            <i className="fas fa-cube"></i>
+                                        </div>
+                                        <div className="resource-info">
+                                            <span className="resource-name">Sugar Level</span>
+                                            <span className="resource-value">{formatPercentage(analyticsData.resourceAverages.sugarLevel)}%</span>
+                                        </div>
+                                        <div className="resource-bar">
+                                            <div 
+                                                className="resource-progress" 
+                                                style={{ 
+                                                    width: `${analyticsData.resourceAverages.sugarLevel}%`,
+                                                    backgroundColor: getResourceColor(analyticsData.resourceAverages.sugarLevel)
+                                                }}
+                                            ></div>
+                                        </div>
                                     </div>
-                                    <div className="resource-info">
-                                        <span className="resource-name">Sugar Level</span>
-                                        <span className="resource-value">{formatPercentage(analyticsData.resourceAverages.sugarLevel)}%</span>
-                                    </div>
-                                    <div className="resource-bar">
-                                        <div 
-                                            className="resource-progress" 
-                                            style={{ 
-                                                width: `${analyticsData.resourceAverages.sugarLevel}%`,
-                                                backgroundColor: getResourceColor(analyticsData.resourceAverages.sugarLevel)
-                                            }}
-                                        ></div>
-                                    </div>
-                                </div>
 
-                                <div className="resource-item">
-                                    <div className="resource-icon">
-                                        <i className="fas fa-thermometer-half"></i>
-                                    </div>
-                                    <div className="resource-info">
-                                        <span className="resource-name">Temperature</span>
-                                        <span className="resource-value">{formatPercentage(analyticsData.resourceAverages.temperature)}°C</span>
-                                    </div>
-                                    <div className="resource-bar">
-                                        <div 
-                                            className="resource-progress" 
-                                            style={{ 
-                                                width: `${(analyticsData.resourceAverages.temperature - 85) / 30 * 100}%`,
-                                                backgroundColor: getTemperatureColor(analyticsData.resourceAverages.temperature)
-                                            }}
-                                        ></div>
+                                    <div className="resource-item">
+                                        <div className="resource-icon">
+                                            <i className="fas fa-thermometer-half"></i>
+                                        </div>
+                                        <div className="resource-info">
+                                            <span className="resource-name">Temperature</span>
+                                            <span className="resource-value">{formatPercentage(analyticsData.resourceAverages.temperature)}°C</span>
+                                        </div>
+                                        <div className="resource-bar">
+                                            <div 
+                                                className="resource-progress" 
+                                                style={{ 
+                                                    width: `${(analyticsData.resourceAverages.temperature - 85) / 30 * 100}%`,
+                                                    backgroundColor: getTemperatureColor(analyticsData.resourceAverages.temperature)
+                                                }}
+                                            ></div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            ) : (
+                                <div className="alert alert-info">
+                                    <i className="fas fa-info-circle"></i>
+                                    {simulatorError || 'Loading resource level data...'}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -306,25 +313,32 @@ const Usage = () => {
                             </h3>
                         </div>
                         <div className="card-body">
-                            <div className="activity-list">
-                                {analyticsData.recentActivity.slice(0, 10).map((activity, index) => (
-                                    <div key={index} className="activity-item">
-                                        <div className="activity-icon">
-                                            <i className="fas fa-coffee"></i>
+                            {analyticsData && analyticsData.recentActivity ? (
+                                <div className="activity-list">
+                                    {analyticsData.recentActivity.slice(0, 10).map((activity, index) => (
+                                        <div key={index} className="activity-item">
+                                            <div className="activity-icon">
+                                                <i className="fas fa-coffee"></i>
+                                            </div>
+                                            <div className="activity-info">
+                                                <span className="activity-machine">Machine {activity.machineId}</span>
+                                                <span className="activity-status">{activity.status}</span>
+                                                {activity.brewType && activity.brewType !== 'None' && (
+                                                    <span className="activity-brew">Brewed {activity.brewType}</span>
+                                                )}
+                                            </div>
+                                            <div className="activity-time">
+                                                {new Date(activity.timestamp).toLocaleTimeString()}
+                                            </div>
                                         </div>
-                                        <div className="activity-info">
-                                            <span className="activity-machine">Machine {activity.machineId}</span>
-                                            <span className="activity-status">{activity.status}</span>
-                                            {activity.brewType && activity.brewType !== 'None' && (
-                                                <span className="activity-brew">Brewed {activity.brewType}</span>
-                                            )}
-                                        </div>
-                                        <div className="activity-time">
-                                            {new Date(activity.timestamp).toLocaleTimeString()}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="alert alert-info">
+                                    <i className="fas fa-info-circle"></i>
+                                    {simulatorError || 'Loading recent activity...'}
+                                </div>
+                            )}
                         </div>
                 </div>
                 </div>
