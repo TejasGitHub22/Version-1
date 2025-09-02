@@ -42,18 +42,22 @@ public class JwtAuthFilter extends OncePerRequestFilter{
 			filterChain.doFilter(request, response);
 			return;
 		}
-		
-		String token = requestTokenHeader.split("Bearer ")[1];
-		Claims claims = authUtil.getClaimsFromToken(token);
-		String username = claims.getSubject();
-		String role = claims.get("role", String.class);
-		
-		List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
-		
-		if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			User user = userRepository.findByUsername(username).orElseThrow();
-			UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(user, null, authorities);
-			SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+		try {
+			String token = requestTokenHeader.split("Bearer ")[1];
+			Claims claims = authUtil.getClaimsFromToken(token);
+			String username = claims.getSubject();
+			String role = claims.get("role", String.class);
+			
+			List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
+			
+			if(username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+				User user = userRepository.findByUsername(username).orElseThrow();
+				UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(user, null, authorities);
+				SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
+			}
+		} catch (Exception ex) {
+			// Invalid or expired token: proceed without authentication so permitAll endpoints still work
+			SecurityContextHolder.clearContext();
 		}
 		
 		filterChain.doFilter(request, response);
