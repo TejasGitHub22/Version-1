@@ -29,30 +29,53 @@ export const DataProvider = ({ children }) => {
             let machinesResult = [];
             let facilitiesResult = [];
             let usageResult = [];
+            let machinesOk = false;
+            let facilitiesOk = false;
+            let usageOk = false;
 
-            if (isAdmin()) {
+            const isAdminUser = isAdmin();
+            if (isAdminUser) {
                 const [machinesData, facilitiesData, usageData] = await Promise.allSettled([
                     machinesAPI.getAll(),
                     facilitiesAPI.getAll(),
                     usageAPI.getAll()
                 ]);
-
-                machinesResult = machinesData.status === 'fulfilled' ? (machinesData.value || []) : [];
-                facilitiesResult = facilitiesData.status === 'fulfilled' ? (facilitiesData.value || []) : [];
-                usageResult = usageData.status === 'fulfilled' ? (usageData.value || []) : [];
+                machinesOk = machinesData.status === 'fulfilled';
+                facilitiesOk = facilitiesData.status === 'fulfilled';
+                usageOk = usageData.status === 'fulfilled';
+                machinesResult = machinesOk ? (machinesData.value || []) : [];
+                facilitiesResult = facilitiesOk ? (facilitiesData.value || []) : [];
+                usageResult = usageOk ? (usageData.value || []) : [];
             } else {
                 const facilityId = getUserFacilityId();
-                const [machinesData, facilityData, usageData] = await Promise.allSettled([
-                    machinesAPI.getByFacility(facilityId),
-                    facilitiesAPI.getById(facilityId),
-                    usageAPI.getAll()
-                ]);
-
-                machinesResult = machinesData.status === 'fulfilled' ? (machinesData.value || []) : [];
-                facilitiesResult = facilityData.status === 'fulfilled' && facilityData.value ? [facilityData.value] : [];
-                const allUsage = usageData.status === 'fulfilled' ? (usageData.value || []) : [];
-                const machineIds = new Set(machinesResult.map(m => parseInt(m.id)));
-                usageResult = allUsage.filter(u => machineIds.has(parseInt(u.machineId)));
+                if (!facilityId) {
+                    // Fallback to admin-style fetch if facility not resolved on client
+                    const [machinesData, facilitiesData, usageData] = await Promise.allSettled([
+                        machinesAPI.getAll(),
+                        facilitiesAPI.getAll(),
+                        usageAPI.getAll()
+                    ]);
+                    machinesOk = machinesData.status === 'fulfilled';
+                    facilitiesOk = facilitiesData.status === 'fulfilled';
+                    usageOk = usageData.status === 'fulfilled';
+                    machinesResult = machinesOk ? (machinesData.value || []) : [];
+                    facilitiesResult = facilitiesOk ? (facilitiesData.value || []) : [];
+                    usageResult = usageOk ? (usageData.value || []) : [];
+                } else {
+                    const [machinesData, facilityData, usageData] = await Promise.allSettled([
+                        machinesAPI.getByFacility(facilityId),
+                        facilitiesAPI.getById(facilityId),
+                        usageAPI.getAll()
+                    ]);
+                    machinesOk = machinesData.status === 'fulfilled';
+                    facilitiesOk = facilityData.status === 'fulfilled';
+                    usageOk = usageData.status === 'fulfilled';
+                    machinesResult = machinesOk ? (machinesData.value || []) : [];
+                    facilitiesResult = facilitiesOk && facilityData.value ? [facilityData.value] : [];
+                    const allUsage = usageOk ? (usageData.value || []) : [];
+                    const machineIds = new Set(machinesResult.map(m => parseInt(m.id)));
+                    usageResult = allUsage.filter(u => machineIds.has(parseInt(u.machineId)));
+                }
             }
 
             setMachines(machinesResult);
@@ -60,9 +83,8 @@ export const DataProvider = ({ children }) => {
             setUsageHistory(usageResult);
             setLastUpdate(new Date());
             
-            // Set error only if all requests failed
-            // Since we split logic above, conservatively flag error if we got no data at all
-            if (machinesResult.length === 0 && facilitiesResult.length === 0 && usageResult.length === 0) {
+            // Flag error only if all fetches actually failed (not when lists are legitimately empty)
+            if (!machinesOk && !facilitiesOk && !usageOk) {
                 setError('Failed to fetch data from all sources');
             }
             
@@ -72,7 +94,7 @@ export const DataProvider = ({ children }) => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [isAdmin, getUserFacilityId]);
 
     // Update machine status
     const updateMachineStatus = useCallback(async (machineId, status) => {
