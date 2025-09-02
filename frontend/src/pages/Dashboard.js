@@ -179,7 +179,7 @@ const Dashboard = () => {
                         <div className="card-body">
                             <div className="usage-summary">
                                 <div className="usage-stat">
-                                    <div className="stat-number">{dashboardData.todayUsage}</div>
+                                    <div className="stat-number">{stats.todayUsage}</div>
                                     <div className="stat-label">Total Brews Today</div>
                                 </div>
                                 <div className="usage-breakdown">
