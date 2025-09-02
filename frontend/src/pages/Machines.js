@@ -92,7 +92,7 @@ const Machines = () => {
                 <div className="alert alert-danger">
                     <i className="fas fa-exclamation-triangle"></i>
                     {error}
-                    <button onClick={fetchMachines} className="btn btn-sm btn-outline-danger" style={{ marginLeft: '10px' }}>
+                    <button onClick={fetchAllData} className="btn btn-sm btn-outline-danger" style={{ marginLeft: '10px' }}>
                         Retry
                     </button>
                 </div>

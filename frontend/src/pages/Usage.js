@@ -85,7 +85,7 @@ const Usage = () => {
                             <i className="fas fa-exclamation-triangle"></i>
                             {error}
                         </div>
-                        <button className="btn btn-primary" onClick={fetchAnalyticsData}>
+                        <button className="btn btn-primary" onClick={fetchSimulatorAnalytics}>
                             <i className="fas fa-redo"></i> Retry
                         </button>
                     </div>
