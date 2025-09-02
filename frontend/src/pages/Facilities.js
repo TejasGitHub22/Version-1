@@ -9,7 +9,8 @@ const Facilities = () => {
         facilities, 
         loading, 
         error, 
-        getMachinesByFacility 
+        getMachinesByFacility,
+        fetchAllData
     } = useData();
 
     if (loading) {
@@ -22,7 +23,7 @@ const Facilities = () => {
                 <div className="alert alert-danger">
                     <i className="fas fa-exclamation-triangle"></i>
                     {error}
-                    <button onClick={fetchFacilities} className="btn btn-sm btn-outline-danger" style={{ marginLeft: '10px' }}>
+                    <button onClick={fetchAllData} className="btn btn-sm btn-outline-danger" style={{ marginLeft: '10px' }}>
                         Retry
                     </button>
                 </div>
@@ -42,7 +43,7 @@ const Facilities = () => {
                 </div>
                 <div className="page-actions">
                     <button 
-                        onClick={fetchFacilities}
+                        onClick={fetchAllData}
                         className="btn btn-outline-primary"
                     >
                         <i className="fas fa-sync-alt"></i>
