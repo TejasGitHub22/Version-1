@@ -275,9 +275,13 @@ public class CoffeeMachineService {
     public void updateMachineData(CoffeeMachineDataDto dto) {
     	CoffeeMachine machine = coffeeMachineRepository.findById(dto.getMachineId()).orElseThrow(
     			()-> new RuntimeException("Machine not found: " + dto.getMachineId()));
-    	
-    	//Update machine real-time values...
-    	machine.setStatus(dto.getStatus());
+
+    	// Apply simulated updates only when technician has turned machine ON
+    	if (!"ON".equalsIgnoreCase(machine.getStatus())) {
+    		return;
+    	}
+
+    	// Update machine real-time values (do not override ON/OFF from MQTT)
     	machine.setTemperature(dto.getTemperature());
     	machine.setWaterLevel(dto.getWaterLevel());
     	machine.setMilkLevel(dto.getMilkLevel());
@@ -287,7 +291,7 @@ public class CoffeeMachineService {
     	coffeeMachineRepository.save(machine);
     	
     	//Log usage if brewType present...
-    	if(dto.getBrewType()!="None") {
+    	if(dto.getBrewType() != null && !"None".equalsIgnoreCase(dto.getBrewType())) {
     		UsageHistory usage = new UsageHistory();
     		usage.setMachineId(machine.getId());
     		usage.setBrewType(dto.getBrewType().toUpperCase());

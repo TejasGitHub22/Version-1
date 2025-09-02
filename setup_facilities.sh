@@ -196,7 +196,7 @@ create_machines_for_office() {
         \"serialNumber\": \"CM-001\",
         \"location\": \"$office_name\",
         \"facilityId\": $office_id,
-        \"status\": \"ACTIVE\"
+        \"status\": \"OFF\"
       }")
     
     if echo "$MACHINE1_RESPONSE" | grep -q "Machine 1"; then
@@ -215,7 +215,7 @@ create_machines_for_office() {
         \"serialNumber\": \"CM-002\",
         \"location\": \"$office_name\",
         \"facilityId\": $office_id,
-        \"status\": \"ACTIVE\"
+        \"status\": \"OFF\"
       }")
     
     if echo "$MACHINE2_RESPONSE" | grep -q "Machine 2"; then
