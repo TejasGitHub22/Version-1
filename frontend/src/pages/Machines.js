@@ -11,7 +11,8 @@ const Machines = () => {
         loading, 
         error, 
         updateMachineStatus,
-        getUsageCountForMachine 
+        getUsageCountForMachine,
+        fetchAllData
     } = useData();
     
     const [filteredMachines, setFilteredMachines] = useState([]);
@@ -111,7 +112,7 @@ const Machines = () => {
                 </div>
                 <div className="page-actions">
                     <button 
-                        onClick={fetchMachines}
+                        onClick={fetchAllData}
                         className="btn btn-outline-primary"
                     >
                         <i className="fas fa-sync-alt"></i>
