@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { machinesAPI, facilitiesAPI, usageAPI } from '../services/api';
+import { useAuth } from './AuthContext';
 
 const DataContext = createContext();
 
@@ -12,6 +13,7 @@ export const useData = () => {
 };
 
 export const DataProvider = ({ children }) => {
+    const { isAdmin, getUserFacilityId } = useAuth();
     const [machines, setMachines] = useState([]);
     const [facilities, setFacilities] = useState([]);
     const [usageHistory, setUsageHistory] = useState([]);
@@ -24,21 +26,43 @@ export const DataProvider = ({ children }) => {
         try {
             setLoading(true);
             setError(null);
-            
-            const [machinesData, facilitiesData, usageData] = await Promise.allSettled([
-                machinesAPI.getAll(),
-                facilitiesAPI.getAll(),
-                usageAPI.getAll()
-            ]);
+            let machinesResult = [];
+            let facilitiesResult = [];
+            let usageResult = [];
 
-            // Handle each result separately to prevent one failure from breaking everything
-            setMachines(machinesData.status === 'fulfilled' ? (machinesData.value || []) : []);
-            setFacilities(facilitiesData.status === 'fulfilled' ? (facilitiesData.value || []) : []);
-            setUsageHistory(usageData.status === 'fulfilled' ? (usageData.value || []) : []);
+            if (isAdmin()) {
+                const [machinesData, facilitiesData, usageData] = await Promise.allSettled([
+                    machinesAPI.getAll(),
+                    facilitiesAPI.getAll(),
+                    usageAPI.getAll()
+                ]);
+
+                machinesResult = machinesData.status === 'fulfilled' ? (machinesData.value || []) : [];
+                facilitiesResult = facilitiesData.status === 'fulfilled' ? (facilitiesData.value || []) : [];
+                usageResult = usageData.status === 'fulfilled' ? (usageData.value || []) : [];
+            } else {
+                const facilityId = getUserFacilityId();
+                const [machinesData, facilityData, usageData] = await Promise.allSettled([
+                    machinesAPI.getByFacility(facilityId),
+                    facilitiesAPI.getById(facilityId),
+                    usageAPI.getAll()
+                ]);
+
+                machinesResult = machinesData.status === 'fulfilled' ? (machinesData.value || []) : [];
+                facilitiesResult = facilityData.status === 'fulfilled' && facilityData.value ? [facilityData.value] : [];
+                const allUsage = usageData.status === 'fulfilled' ? (usageData.value || []) : [];
+                const machineIds = new Set(machinesResult.map(m => parseInt(m.id)));
+                usageResult = allUsage.filter(u => machineIds.has(parseInt(u.machineId)));
+            }
+
+            setMachines(machinesResult);
+            setFacilities(facilitiesResult);
+            setUsageHistory(usageResult);
             setLastUpdate(new Date());
             
             // Set error only if all requests failed
-            if (machinesData.status === 'rejected' && facilitiesData.status === 'rejected' && usageData.status === 'rejected') {
+            // Since we split logic above, conservatively flag error if we got no data at all
+            if (machinesResult.length === 0 && facilitiesResult.length === 0 && usageResult.length === 0) {
                 setError('Failed to fetch data from all sources');
             }
             
@@ -128,13 +152,12 @@ export const DataProvider = ({ children }) => {
     // Auto-refresh data every 10 seconds
     useEffect(() => {
         fetchAllData();
-        
+        const refreshMs = isAdmin() ? 60000 : 30000;
         const interval = setInterval(() => {
             fetchAllData();
-        }, 10000); // 10 seconds
-
+        }, refreshMs);
         return () => clearInterval(interval);
-    }, [fetchAllData]);
+    }, [fetchAllData, isAdmin]);
 
     const value = {
         // Data
