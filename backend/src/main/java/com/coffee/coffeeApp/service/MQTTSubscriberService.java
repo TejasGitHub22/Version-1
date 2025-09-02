@@ -19,9 +19,11 @@ public class MQTTSubscriberService {
 
 	private final CoffeeMachineService coffeeMachineService;
 	private final ExecutorService executorService = Executors.newFixedThreadPool(50);
+	private final ObjectMapper objectMapper;
 
-	public MQTTSubscriberService(CoffeeMachineService coffeeMachineService) {
+	public MQTTSubscriberService(CoffeeMachineService coffeeMachineService, ObjectMapper objectMapper) {
 		this.coffeeMachineService = coffeeMachineService;
+		this.objectMapper = objectMapper;
 	}
 
 	@Value("${mqtt.broker.url}")
@@ -53,8 +55,7 @@ public class MQTTSubscriberService {
 			executorService.submit(() -> {
 				try {
 					String payload = new String(msg.getPayload());
-					ObjectMapper mapper = new ObjectMapper();
-					CoffeeMachineDataDto dto = mapper.readValue(payload, CoffeeMachineDataDto.class);
+					CoffeeMachineDataDto dto = objectMapper.readValue(payload, CoffeeMachineDataDto.class);
 					coffeeMachineService.updateMachineData(dto);
 					System.out.println(payload);
 				} catch (Exception e) {

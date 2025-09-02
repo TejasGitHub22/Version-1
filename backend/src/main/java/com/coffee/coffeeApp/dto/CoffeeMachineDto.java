@@ -12,6 +12,9 @@ public class CoffeeMachineDto {
     @NotBlank(message = "Facility ID is required")
     private String facilityId;
     
+    @NotBlank(message = "Name is required")
+    private String name;
+    
     @NotBlank(message = "Status is required")
     @Pattern(regexp = "ON|OFF", message = "Status must be either ON or OFF")
     private String status;
@@ -100,6 +103,14 @@ public class CoffeeMachineDto {
     
     public void setStatus(String status) {
         this.status = status;
+    }
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
     }
     
     public Float getTemperature() {

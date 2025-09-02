@@ -499,6 +499,7 @@ public class CoffeeMachineService {
         CoffeeMachine machine = new CoffeeMachine();
         // Do not set id on create; let DB generate it
         machine.setFacilityId(Integer.parseInt(dto.getFacilityId()));
+        machine.setName(dto.getName());
         machine.setStatus(dto.getStatus());
         machine.setTemperature(dto.getTemperature());
         machine.setWaterLevel(dto.getWaterLevel());
