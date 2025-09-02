@@ -52,6 +52,7 @@ package com.coffee.coffeeApp.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -71,6 +72,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.List;
 
 @Configuration
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -90,17 +92,24 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 		httpSecurity
 				.csrf(csrfConfig -> csrfConfig.disable())
-				.cors().and() // 🔥 enable CORS
+				.cors(cors -> {
+				})
 				.sessionManagement(
 						sessionConfig -> sessionConfig.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(auth -> auth
 						.requestMatchers("/api/auth/**").permitAll()
+						.requestMatchers("/api/health/**").permitAll()
+						// ADMIN endpoints - can access all facilities and admin features
+						.requestMatchers("/api/admin/**").hasRole("ADMIN")
+						// FACILITY endpoints - can only access their assigned facility
+						.requestMatchers("/api/facility/**").hasRole("FACILITY")
+						// Public endpoints for basic information
 						.requestMatchers(org.springframework.http.HttpMethod.GET,
-								"/api/health/**",
 								"/api/facilities/**",
 								"/api/machines/**",
 								"/api/usage/**",
-								"/api/alerts/**").permitAll()
+								"/api/alerts/**")
+						.authenticated()
 						.anyRequest().authenticated())
 				.addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -111,7 +120,9 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of("http://localhost:3000")); // your React app
+		// Broaden CORS to support local dev (localhost/127.0.0.1 and various ports) and
+		// dev servers
+		configuration.setAllowedOriginPatterns(List.of("*"));
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setAllowCredentials(true);

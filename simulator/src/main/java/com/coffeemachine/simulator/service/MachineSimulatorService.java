@@ -63,6 +63,35 @@ public class MachineSimulatorService {
         }
     }
 
+    // In-memory machine state for deterministic, gradual changes
+    private static class MachineState {
+        int facilityId;
+        String status;
+        int temperature;
+        int water;
+        int milk;
+        int beans;
+        int sugar;
+    }
+
+    private final Map<Integer, MachineState> idToState = new HashMap<>();
+
+    private void ensureStatesInitialized() {
+        if (!idToState.isEmpty()) return;
+        // Machines 1-3: Pune (facility 1), 4-6: Mumbai (facility 2)
+        for (int id = 1; id <= 6; id++) {
+            MachineState s = new MachineState();
+            s.facilityId = (id <= 3) ? 1 : 2;
+            s.status = "ON";
+            s.temperature = 92; // starting temp
+            s.water = 100;
+            s.milk = 100;
+            s.beans = 100;
+            s.sugar = 100;
+            idToState.put(id, s);
+        }
+    }
+
     // Runs every 5 seconds
     @Scheduled(fixedRate = 5000)
     public void simulateMachines() {
@@ -73,11 +102,10 @@ public class MachineSimulatorService {
                 return;
             }
 
-            System.out.println("🔄 Starting simulation cycle for 3 machines...");
+            ensureStatesInitialized();
+            System.out.println("🔄 Starting simulation cycle for 6 machines...");
 
-            // Simulate 3 coffee machines
-            for (int machineId = 1; machineId <= 3; machineId++) {
-                // Generate random machine data with integer values
+            for (int machineId = 1; machineId <= 6; machineId++) {
                 Map<String, Object> messageMap = generateMachineData(machineId);
 
                 try {
@@ -120,30 +148,44 @@ public class MachineSimulatorService {
 
     private Map<String, Object> generateMachineData(int machineId) {
         Map<String, Object> messageMap = new LinkedHashMap<>();
-        Random random = new Random();
+        ensureStatesInitialized();
+        MachineState s = idToState.get(machineId);
+        if (s == null) {
+            s = new MachineState();
+            s.facilityId = (machineId <= 3) ? 1 : 2;
+            s.status = "ON";
+            s.temperature = 92;
+            s.water = s.milk = s.beans = s.sugar = 100;
+            idToState.put(machineId, s);
+        }
 
-        // Generate realistic coffee machine data with integer values
+        // Simple logic: if ON, gradually decrease supplies; temp fluctuates a bit
+        if ("ON".equals(s.status)) {
+            s.temperature = Math.max(85, Math.min(110, s.temperature + (new Random().nextBoolean() ? 1 : -1)));
+            s.water = Math.max(0, s.water - 3);
+            s.milk = Math.max(0, s.milk - 2);
+            s.beans = Math.max(0, s.beans - 1);
+            s.sugar = Math.max(0, s.sugar - 1);
+        }
+
         messageMap.put("machineId", machineId);
-        messageMap.put("facilityId", 1); // Default facility
-        messageMap.put("status", random.nextBoolean() ? "ON" : "OFF");
-        messageMap.put("temperature", 85 + random.nextInt(31)); // 85-115°C
-        messageMap.put("waterLevel", 20 + random.nextInt(81)); // 20-100%
-        messageMap.put("milkLevel", 20 + random.nextInt(81)); // 20-100%
-        messageMap.put("beansLevel", 20 + random.nextInt(81)); // 20-100%
-        messageMap.put("sugarLevel", 20 + random.nextInt(81)); // 20-100%
+        messageMap.put("facilityId", s.facilityId);
+        messageMap.put("status", s.status);
+        messageMap.put("temperature", s.temperature);
+        messageMap.put("waterLevel", s.water);
+        messageMap.put("milkLevel", s.milk);
+        messageMap.put("beansLevel", s.beans);
+        messageMap.put("sugarLevel", s.sugar);
 
-        // Generate brew type if machine is ON
-        String status = (String) messageMap.get("status");
-        if ("ON".equals(status)) {
+        if ("ON".equals(s.status)) {
             String[] brewTypes = { "AMERICANO", "LATTE", "BLACK_COFFEE", "CAPPUCCINO", "ESPRESSO" };
-            String brewType = brewTypes[random.nextInt(brewTypes.length)];
+            String brewType = brewTypes[Math.abs(Objects.hash(machineId, System.currentTimeMillis())) % brewTypes.length];
             messageMap.put("brewType", brewType);
         } else {
             messageMap.put("brewType", "None");
         }
 
         messageMap.put("timestamp", LocalDateTime.now().toString());
-
         return messageMap;
     }
 }

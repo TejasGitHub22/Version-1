@@ -70,8 +70,24 @@ public class CoffeeMachineController {
             @RequestParam Float milkLevel,
             @RequestParam Float beansLevel,
             @RequestParam Float temperature) {
-        CoffeeMachineDto updatedMachine = coffeeMachineService.updateMachineLevels(id, waterLevel, milkLevel, beansLevel, temperature);
+        CoffeeMachineDto updatedMachine = coffeeMachineService.updateMachineLevels(id, waterLevel, milkLevel,
+                beansLevel, temperature);
         return ResponseEntity.ok(updatedMachine);
+    }
+
+    // Refill endpoint - FACILITY/TECHNICIAN users can refill supplies
+    @PreAuthorize("hasAnyRole('FACILITY','ADMIN')")
+    @PostMapping("/{id}/refill")
+    public ResponseEntity<CoffeeMachineDto> refillMachine(
+            @PathVariable String id,
+            @RequestParam(required = false) Float water,
+            @RequestParam(required = false) Float milk,
+            @RequestParam(required = false) Float beans) {
+        Float waterLevel = water != null ? Math.max(0f, Math.min(100f, water)) : null;
+        Float milkLevel = milk != null ? Math.max(0f, Math.min(100f, milk)) : null;
+        Float beansLevel = beans != null ? Math.max(0f, Math.min(100f, beans)) : null;
+        CoffeeMachineDto updated = coffeeMachineService.updatePartialLevels(id, waterLevel, milkLevel, beansLevel);
+        return ResponseEntity.ok(updated);
     }
 
     @PostMapping("/{id}/status")
@@ -90,7 +106,8 @@ public class CoffeeMachineController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<CoffeeMachineDto> updateMachine(@PathVariable String id, @Valid @RequestBody CoffeeMachineDto machineDto) {
+    public ResponseEntity<CoffeeMachineDto> updateMachine(@PathVariable String id,
+            @Valid @RequestBody CoffeeMachineDto machineDto) {
         CoffeeMachineDto updatedMachine = coffeeMachineService.updateMachine(id, machineDto);
         return ResponseEntity.ok(updatedMachine);
     }

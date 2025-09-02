@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../context/DataContext';
+import { adminAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Usage = () => {
@@ -14,9 +15,14 @@ const Usage = () => {
     } = useData();
     
     const [analyticsData, setAnalyticsData] = useState(null);
+    const [adminToday, setAdminToday] = useState(null);
+    const [brewTypeStats, setBrewTypeStats] = useState(null);
     const [simulatorError, setSimulatorError] = useState(null);
 
     useEffect(() => {
+        // Fetch admin usage today and brewed types for admin overview cards
+        fetchAdminUsage();
+        // Keep simulator analytics (optional) for detailed visualizations if available
         fetchSimulatorAnalytics();
     }, []);
 
@@ -40,6 +46,22 @@ const Usage = () => {
         }
     };
 
+    const fetchAdminUsage = async () => {
+        try {
+            const [todayRes, brewTypesRes] = await Promise.all([
+                adminAPI.getUsageToday(),
+                adminAPI.getBrewTypeStats()
+            ]);
+            setAdminToday(todayRes?.todayTotal ?? null);
+            // brewTypesRes is expected as an array of { brewType, count }
+            setBrewTypeStats(Array.isArray(brewTypesRes) ? brewTypesRes : null);
+        } catch (err) {
+            // Leave as null to fallback to context/simulator
+            setAdminToday(null);
+            setBrewTypeStats(null);
+        }
+    };
+
     const formatPercentage = (value) => {
         return Math.round(value * 100) / 100;
     };
@@ -53,7 +75,7 @@ const Usage = () => {
         ? analyticsData.recentActivity.filter(a => a && a.brewType && a.brewType !== 'None' && new Date(a.timestamp).toDateString() === todayStr).length
         : null;
     const totalCups = totalFromAnalytics ?? getTotalUsageCount();
-    const todayCups = todayFromAnalytics ?? getTodayUsageCount();
+    const todayCups = (adminToday != null ? adminToday : todayFromAnalytics) ?? getTodayUsageCount();
 
     const getStatusColor = (status) => {
         return status === 'ON' ? '#28a745' : '#dc3545';

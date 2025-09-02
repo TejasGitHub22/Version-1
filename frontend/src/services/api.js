@@ -348,7 +348,7 @@ export const usageHistoryAPI = {
 // Dashboard API (if implemented)
 export const dashboardAPI = {
     getSummary: async () => {
-        return await apiRequest('/api/dashboard/summary');
+        return await apiRequest('/api/admin/summary');
     },
 
     getFacilityDashboard: async (facilityId) => {
@@ -360,6 +360,15 @@ export const dashboardAPI = {
     }
 };
 
+// Admin API
+export const adminAPI = {
+    getSummary: async () => apiRequest('/api/admin/summary'),
+    getUsageToday: async () => apiRequest('/api/admin/usage-today'),
+    getBrewTypeStats: async () => apiRequest('/api/admin/analytics'),
+    getDailyUsage: async () => apiRequest('/api/admin/usage-history'),
+    getAlertsSummary: async () => apiRequest('/api/admin/alerts')
+};
+
 export default {
     authAPI,
     healthAPI,
@@ -369,5 +378,6 @@ export default {
     alertsAPI,
     usageAPI,
     usageHistoryAPI,
-    dashboardAPI
+    dashboardAPI,
+    adminAPI
 };

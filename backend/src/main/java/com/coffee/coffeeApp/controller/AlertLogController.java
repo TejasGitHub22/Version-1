@@ -80,4 +80,10 @@ public class AlertLogController {
         alertLogService.deleteAlert(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/acknowledge")
+    public ResponseEntity<Void> acknowledge(@PathVariable String id) {
+        alertLogService.acknowledgeAlert(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -2,25 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
+import { adminAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const Dashboard = () => {
     const { user, isAdmin, isFacility, getUserFacilityId } = useAuth();
-    const { 
-        machines, 
-        facilities, 
-        loading, 
-        error, 
-        getDashboardStats, 
-        getLowSupplyMachines,
-        updateMachineStatus 
-    } = useData();
+    const { machines, facilities, loading, error } = useData();
+    const [summary, setSummary] = useState(null);
 
     const [localError, setLocalError] = useState(null);
 
-    // Get real-time dashboard statistics
-    const stats = getDashboardStats();
-    const lowSupplyMachines = getLowSupplyMachines();
+    useEffect(() => {
+        if (isAdmin()) {
+            adminAPI.getSummary().then(setSummary).catch(() => setSummary(null));
+        }
+    }, [isAdmin]);
 
     if (loading) {
         return <LoadingSpinner text="Loading dashboard..." />;
@@ -55,7 +51,7 @@ const Dashboard = () => {
                             <i className="fas fa-coffee"></i>
                         </div>
                         <div className="card-content">
-                            <h3>{stats.totalMachines}</h3>
+                            <h3>{isAdmin() ? (summary?.totalMachines ?? 0) : machines.length}</h3>
                             <p>Total Machines</p>
                         </div>
                     </div>
@@ -66,7 +62,7 @@ const Dashboard = () => {
                             <i className="fas fa-power-off"></i>
                         </div>
                         <div className="card-content">
-                            <h3>{stats.activeMachines}</h3>
+                            <h3>{isAdmin() ? (summary?.activeMachines ?? 0) : machines.filter(m => m.status === 'ON').length}</h3>
                             <p>Active Machines</p>
                         </div>
                     </div>
@@ -90,12 +86,51 @@ const Dashboard = () => {
                             <i className="fas fa-exclamation-triangle"></i>
                         </div>
                         <div className="card-content">
-                            <h3>{stats.lowSupplyMachines}</h3>
-                            <p>Low Supply Alerts</p>
+                            <h3>{isAdmin() ? (summary?.totalAlerts ?? 0) : 0}</h3>
+                            <p>Total Alerts</p>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {isAdmin() && summary && (
+                <div className="row">
+                    {["Pune", "Mumbai"].map(city => {
+                        const facs = (summary.facilities || []).filter(f => f.location === city);
+                        const machinesCount = facs.reduce((acc, f) => acc + (f.totalMachines || 0), 0);
+                        const activeCount = facs.reduce((acc, f) => acc + (f.activeMachines || 0), 0);
+                        const firstId = facs[0]?.id;
+                        return (
+                            <div key={city} className="col-md-6">
+                                <div className="card">
+                                    <div className="card-header">
+                                        <h3 className="card-title"><i className="fas fa-building"></i> {city}</h3>
+                                        {firstId && (
+                                            <Link to={`/facilities/${firstId}`} className="btn btn-outline-primary">View Details</Link>
+                                        )}
+                                    </div>
+                                    <div className="card-body">
+                                        <div className="row">
+                                            <div className="col-6">
+                                                <div className="summary-card">
+                                                    <div className="card-icon facility"><i className="fas fa-cogs"></i></div>
+                                                    <div className="card-content"><h3>{machinesCount}</h3><p>Total Machines</p></div>
+                                                </div>
+                                            </div>
+                                            <div className="col-6">
+                                                <div className="summary-card">
+                                                    <div className="card-icon active"><i className="fas fa-power-off"></i></div>
+                                                    <div className="card-content"><h3>{activeCount}</h3><p>Active Machines</p></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* Machine Status Grid */}
             <div className="row">
@@ -167,32 +202,9 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            {/* Usage Summary */}
+            {/* System Status */}
             <div className="row">
-                <div className="col-md-6">
-                    <div className="card">
-                        <div className="card-header">
-                            <h3 className="card-title">
-                                <i className="fas fa-chart-bar"></i> Today's Usage
-                            </h3>
-                        </div>
-                        <div className="card-body">
-                            <div className="usage-summary">
-                                <div className="usage-stat">
-                                    <div className="stat-number">{stats.todayUsage}</div>
-                                    <div className="stat-label">Total Brews Today</div>
-                                </div>
-                                <div className="usage-breakdown">
-                                    <Link to="/usage" className="btn btn-outline-primary">
-                                        <i className="fas fa-chart-line"></i> View Detailed Analytics
-                                    </Link>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="col-md-6">
+                <div className="col-md-12">
                     <div className="card">
                         <div className="card-header">
                             <h3 className="card-title">
