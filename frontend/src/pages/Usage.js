@@ -44,6 +44,17 @@ const Usage = () => {
         return Math.round(value * 100) / 100;
     };
 
+    // Derive totals from simulator analytics if available; fallback to context
+    const todayStr = new Date().toDateString();
+    const totalFromAnalytics = analyticsData && analyticsData.brewTypes
+        ? Object.values(analyticsData.brewTypes).reduce((sum, count) => sum + (Number(count) || 0), 0)
+        : null;
+    const todayFromAnalytics = analyticsData && analyticsData.recentActivity
+        ? analyticsData.recentActivity.filter(a => a && a.brewType && a.brewType !== 'None' && new Date(a.timestamp).toDateString() === todayStr).length
+        : null;
+    const totalCups = totalFromAnalytics ?? getTotalUsageCount();
+    const todayCups = todayFromAnalytics ?? getTodayUsageCount();
+
     const getStatusColor = (status) => {
         return status === 'ON' ? '#28a745' : '#dc3545';
     };
@@ -106,7 +117,7 @@ const Usage = () => {
                         </div>
                         <div className="card-body">
                             <div className="usage-stat">
-                                <h2>{getTotalUsageCount()}</h2>
+                                <h2>{totalCups}</h2>
                                 <p>Total Cups Brewed</p>
                             </div>
                         </div>
@@ -121,7 +132,7 @@ const Usage = () => {
                         </div>
                         <div className="card-body">
                             <div className="usage-stat">
-                                <h2>{getTodayUsageCount()}</h2>
+                                <h2>{todayCups}</h2>
                                 <p>Cups Brewed Today</p>
                             </div>
                         </div>
